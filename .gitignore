@@ -1,0 +1,51 @@
+# Python / Byte-compiled / Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# OS / System generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# PyTorch / Deep Learning Checkpoints & Weights
+*.pt
+*.pth
+*.bin
+*.onnx
+*.safetensors
+*.h5
+
+# Project Data & Output artifacts
+data/output/*
+!data/output/.gitkeep
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp

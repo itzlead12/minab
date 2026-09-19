@@ -1,0 +1,54 @@
+# Monocular 3D Reconstruction Pipeline Configuration
+# IMPORTANT SCALE DISCLAIMER:
+# Monocular camera motion recovery via cv2.recoverPose() has translation scale ambiguity.
+# The translation vector ||t|| is normalized to 1.0 between consecutive keyframes.
+# All spatial coordinates (X, Y, Z), voxel sizes, and point clouds are in ARBITRARY RELATIVE UNITS,
+# NOT metric meters. Do not interpret these as metric measurements.
+
+feature_tracker:
+  max_features: 2000
+  scale_factor: 1.2
+  n_levels: 8
+  match_ratio: 0.75
+  min_matches: 25
+
+pose_estimator:
+  ransac_prob: 0.999
+  ransac_threshold_px: 1.2
+  min_inliers: 20
+
+depth_estimator:
+  # HuggingFace model repo for Depth Anything V2
+  model_id: "depth-anything/Depth-Anything-V2-Small-hf"
+  device: "auto" # "cuda", "cpu", or "auto"
+  # Depth Anything V2 outputs relative depth values.
+  # We scale the relative depth range for 3D back-projection:
+  relative_depth_min: 0.5
+  relative_depth_max: 5.0
+  # Set input image processing max resolution (speeds up CPU inference)
+  max_inference_dimension: 518
+
+keyframe_selection:
+  enabled: true
+  min_translation_norm: 0.05 # relative translation required to trigger keyframe
+  min_rotation_deg: 2.5      # relative rotation in degrees required to trigger keyframe
+  max_frame_skip: 8          # force keyframe if N frames pass without one
+
+reconstruction:
+  backprojection:
+    pixel_stride: 2          # sample every Nth pixel for faster point generation
+    relative_depth_trunc: 8.0
+  fusion:
+    voxel_size: 0.02         # voxel downsample size in relative units
+    outlier_nb_neighbors: 20 # statistical outlier filter neighbors
+    outlier_std_ratio: 2.0   # standard deviation multiplier for outlier removal
+  meshing:
+    method: "poisson"        # "poisson" or "ball_pivoting"
+    poisson_depth: 8
+    trim_density_percentile: 0.05 # trim low-density Poisson vertices
+    bpa_radii: [0.02, 0.04, 0.08]
+
+visualization:
+  show_trajectory: true
+  frustum_scale: 0.15        # relative visual size of camera frustums in 3D viewer
+  point_size: 2.5
