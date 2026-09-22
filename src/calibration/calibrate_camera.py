@@ -194,6 +194,32 @@ def load_calibration(config_path: str) -> Dict:
     }
 
 
+def scale_camera_matrix(
+    K: np.ndarray,
+    orig_w: int,
+    orig_h: int,
+    new_w: int,
+    new_h: int,
+) -> np.ndarray:
+    """
+    Scales camera intrinsic matrix K when video resolution differs from calibration resolution.
+    fx' = fx * (new_w / orig_w), cx' = cx * (new_w / orig_w)
+    fy' = fy * (new_h / orig_h), cy' = cy * (new_h / orig_h)
+    """
+    if orig_w == new_w and orig_h == new_h:
+        return K.copy()
+
+    sx = float(new_w) / float(orig_w)
+    sy = float(new_h) / float(orig_h)
+
+    K_scaled = K.copy().astype(np.float64)
+    K_scaled[0, 0] *= sx
+    K_scaled[0, 2] *= sx
+    K_scaled[1, 1] *= sy
+    K_scaled[1, 2] *= sy
+    return K_scaled
+
+
 def main():
     parser = argparse.ArgumentParser(description="Calibrate camera intrinsics using a chessboard pattern.")
     parser.add_argument("--images", type=str, help="Glob pattern for calibration images (e.g. 'data/calib/*.jpg')")

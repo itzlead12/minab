@@ -56,11 +56,30 @@ class FeatureTracker:
             patchSize=31,
             fastThreshold=20,
         )
+        self.clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
         self.matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
+
+    def preprocess_frame(self, frame: np.ndarray) -> np.ndarray:
+        """
+        Enhances frame sharpness and micro-textures (CLAHE + unsharp masking)
+        to maximize corner detection and feature descriptor distinctiveness.
+        """
+        if len(frame.shape) == 3:
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = frame.copy()
+
+        # 1. CLAHE to bring out subtle textures in shadows and highlights
+        enhanced = self.clahe.apply(gray)
+
+        # 2. Unsharp masking to sharpen edge gradients
+        gaussian = cv2.GaussianBlur(enhanced, (0, 0), sigmaX=1.0)
+        sharpened = cv2.addWeighted(enhanced, 1.4, gaussian, -0.4, 0)
+        return sharpened
 
     def extract(self, frame: np.ndarray) -> Tuple[List[cv2.KeyPoint], Optional[np.ndarray]]:
         """
-        Detects ORB keypoints and computes their binary descriptors.
+        Detects ORB keypoints and computes their binary descriptors on sharpened frame.
 
         Args:
             frame: BGR or grayscale image array.
@@ -68,12 +87,8 @@ class FeatureTracker:
         Returns:
             Tuple of (keypoints, descriptors).
         """
-        if len(frame.shape) == 3:
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        else:
-            gray = frame
-
-        kp, des = self.orb.detectAndCompute(gray, None)
+        sharpened_gray = self.preprocess_frame(frame)
+        kp, des = self.orb.detectAndCompute(sharpened_gray, None)
         return kp, des
 
     def match(
@@ -82,9 +97,12 @@ class FeatureTracker:
         des1: Optional[np.ndarray],
         kp2: List[cv2.KeyPoint],
         des2: Optional[np.ndarray],
+        frame1_gray: Optional[np.ndarray] = None,
+        frame2_gray: Optional[np.ndarray] = None,
     ) -> Optional[MatchResult]:
         """
         Matches descriptors between frame 1 and frame 2 using k-NN with k=2 and Lowe's ratio test.
+        Optionally refines matched point coordinates with sub-pixel precision.
 
         Returns:
             MatchResult if number of valid matches >= min_matches, else None.
@@ -113,9 +131,21 @@ class FeatureTracker:
         if len(good_matches) < self.min_matches:
             return None
 
+        pts1_arr = np.array(pts1, dtype=np.float32)
+        pts2_arr = np.array(pts2, dtype=np.float32)
+
+        # Sub-pixel corner refinement if grayscale frames provided
+        if frame1_gray is not None and frame2_gray is not None and len(pts1_arr) >= 8:
+            criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.01)
+            try:
+                pts1_arr = cv2.cornerSubPix(frame1_gray, pts1_arr, winSize=(5, 5), zeroZone=(-1, -1), criteria=criteria)
+                pts2_arr = cv2.cornerSubPix(frame2_gray, pts2_arr, winSize=(5, 5), zeroZone=(-1, -1), criteria=criteria)
+            except Exception:
+                pass
+
         return MatchResult(
-            pts1=np.array(pts1, dtype=np.float32),
-            pts2=np.array(pts2, dtype=np.float32),
+            pts1=pts1_arr,
+            pts2=pts2_arr,
             kp1=kp1,
             kp2=kp2,
             matches=good_matches,

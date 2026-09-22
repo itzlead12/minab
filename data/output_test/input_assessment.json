@@ -1,0 +1,30 @@
+{
+  "video_path": "data/input_videos/instruction_aligned_test.mp4",
+  "resolution": [
+    1280,
+    720
+  ],
+  "resolution_label": "1280x720",
+  "resolution_quality": "720p (Good)",
+  "fps": 30.0,
+  "duration_sec": 1.5,
+  "total_frames": 45,
+  "sharpness_score": 652.9,
+  "sharpness_grade": "Crisp & Sharp",
+  "parallax_score": 10.2,
+  "motion_type": "Smooth Continuous Arc",
+  "subject_centered": false,
+  "center_feature_ratio": 0.23,
+  "is_compliant": true,
+  "passed_checks": [
+    "Frame rate is optimal: 30.0 fps (24-30 fps expected)",
+    "High image sharpness score: 652.9 (stable focus)",
+    "Good motion parallax detected: 10.2px average displacement"
+  ],
+  "warnings": [
+    "Duration is very short (1.5s). System needs 5\u201315s for full scene coverage."
+  ],
+  "tips": [
+    "Keep the main subject centered throughout the camera motion (instruction.md Section 3)."
+  ]
+}

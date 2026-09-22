@@ -1,19 +1,8 @@
 camera_matrix:
-- - 500.0
-  - 0.0
-  - 320.0
-- - 0.0
-  - 500.0
-  - 240.0
-- - 0.0
-  - 0.0
-  - 1.0
-camera_name: synthetic_pinhole_camera_for_testing
-dist_coeff:
-- 0.0
-- 0.0
-- 0.0
-- 0.0
-- 0.0
-image_height: 480
-image_width: 640
+- [1000.0, 0.0, 640.0]
+- [0.0, 1000.0, 360.0]
+- [0.0, 0.0, 1.0]
+camera_name: calibrated_synthetic_camera_720p
+dist_coeff: [0.0, 0.0, 0.0, 0.0, 0.0]
+image_height: 720
+image_width: 1280

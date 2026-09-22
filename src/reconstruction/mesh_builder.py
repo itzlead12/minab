@@ -28,7 +28,7 @@ class MeshBuilder:
             bpa_radii: List of ball radii (in relative units) for Ball-Pivoting Algorithm.
         """
         self.method = method.lower()
-        self.poisson_depth = poisson_depth
+        self.poisson_depth = poisson_depth or 9
         self.trim_density_percentile = trim_density_percentile
         self.bpa_radii = bpa_radii or [0.02, 0.04, 0.08]
 
@@ -43,19 +43,42 @@ class MeshBuilder:
             # Derive radius from bounding box size if not specified
             bbox = pcd.get_axis_aligned_bounding_box()
             extent = np.linalg.norm(bbox.get_extent())
-            radius = extent * 0.03
+            radius = max(0.03, extent * 0.025)
 
         pcd.estimate_normals(
             search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=radius, max_nn=max_nn)
         )
         pcd.orient_normals_consistent_tangent_plane(k=15)
 
+    def transfer_colors_from_cloud(
+        self,
+        mesh: o3d.geometry.TriangleMesh,
+        pcd: o3d.geometry.PointCloud,
+    ) -> None:
+        """
+        Transfers true RGB surface colors from the dense point cloud onto mesh vertices
+        using fast nearest-neighbor spatial interpolation.
+        """
+        if not pcd.has_colors() or len(mesh.vertices) == 0:
+            return
+
+        try:
+            from scipy.spatial import cKDTree
+            pts = np.asarray(pcd.points)
+            colors = np.asarray(pcd.colors)
+            tree = cKDTree(pts)
+            _, indices = tree.query(np.asarray(mesh.vertices), k=1)
+            mesh.vertex_colors = o3d.utility.Vector3dVector(colors[indices])
+            print(f"[MeshBuilder] Successfully mapped RGB surface colors to {len(mesh.vertices)} vertices.")
+        except Exception as e:
+            print(f"[MeshBuilder] Color transfer warning: {e}")
+
     def build_mesh(
         self,
         pcd: o3d.geometry.PointCloud,
     ) -> Tuple[o3d.geometry.TriangleMesh, Optional[np.ndarray]]:
         """
-        Reconstructs a triangle mesh from an Open3D point cloud.
+        Reconstructs a sharp triangle mesh with vertex colors from an Open3D point cloud.
 
         Returns:
             Tuple of (TriangleMesh, densities_array or None).
@@ -69,7 +92,7 @@ class MeshBuilder:
             self.estimate_normals(pcd)
 
         if self.method == "poisson":
-            print(f"[MeshBuilder] Running Poisson Surface Reconstruction (octree depth={self.poisson_depth})...")
+            print(f"[MeshBuilder] Running Screened Poisson Reconstruction (octree depth={self.poisson_depth})...")
             mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(
                 pcd, depth=self.poisson_depth
             )
@@ -92,17 +115,21 @@ class MeshBuilder:
         else:
             raise ValueError(f"Unknown meshing method: '{self.method}'. Expected 'poisson' or 'ball_pivoting'.")
 
-        # Clean mesh
+        # Clean mesh topology
         mesh.remove_degenerate_triangles()
         mesh.remove_duplicated_triangles()
         mesh.remove_duplicated_vertices()
         mesh.remove_non_manifold_edges()
         mesh.compute_vertex_normals()
 
+        # Transfer point cloud colors to mesh vertices for realistic visual rendering
+        if pcd.has_colors():
+            self.transfer_colors_from_cloud(mesh, pcd)
+
         print(f"[MeshBuilder] Mesh constructed: {len(mesh.vertices)} vertices, {len(mesh.triangles)} triangles.")
         return mesh, densities_np
 
     @staticmethod
     def save(mesh: o3d.geometry.TriangleMesh, filepath: str) -> bool:
-        """Exports the reconstructed mesh to .ply, .obj, or .stl."""
-        return o3d.io.write_triangle_mesh(filepath, mesh)
+        """Exports the reconstructed mesh to .ply, .obj, or .stl with vertex colors."""
+        return o3d.io.write_triangle_mesh(filepath, mesh, write_vertex_colors=True)

@@ -26,7 +26,8 @@ if _current_dir not in sys.path:
 if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 
-from calibration.calibrate_camera import load_calibration
+from calibration.calibrate_camera import load_calibration, scale_camera_matrix
+from calibration.input_validator import VideoInputAssessor
 from depth.depth_estimator import DepthEstimator
 from reconstruction.backprojector import Backprojector
 from reconstruction.cloud_fusion import PointCloudFusion
@@ -83,6 +84,73 @@ def save_trajectory_tum_format(trajectory, output_path: str):
             f.write(f"{pose.frame_idx} {t[0]:.6f} {t[1]:.6f} {t[2]:.6f} {qx:.6f} {qy:.6f} {qz:.6f} {qw:.6f}\n")
 
 
+def save_trajectory_json_format(trajectory, output_path: str):
+    """
+    Saves camera poses in structured JSON format with positions and quaternions
+    for web 3D visualizers.
+    """
+    poses = []
+    for pose in trajectory:
+        t = pose.camera_center
+        R = pose.rotation
+        tr = np.trace(R)
+        if tr > 0:
+            S = np.sqrt(tr + 1.0) * 2
+            qw = 0.25 * S
+            qx = (R[2, 1] - R[1, 2]) / S
+            qy = (R[0, 2] - R[2, 0]) / S
+            qz = (R[1, 0] - R[0, 1]) / S
+        elif (R[0, 0] > R[1, 1]) and (R[0, 0] > R[2, 2]):
+            S = np.sqrt(1.0 + R[0, 0] - R[1, 1] - R[2, 2]) * 2
+            qw = (R[2, 1] - R[1, 2]) / S
+            qx = 0.25 * S
+            qy = (R[0, 1] + R[1, 0]) / S
+            qz = (R[0, 2] + R[2, 0]) / S
+        elif R[1, 1] > R[2, 2]:
+            S = np.sqrt(1.0 + R[1, 1] - R[0, 0] - R[2, 2]) * 2
+            qw = (R[0, 2] - R[2, 0]) / S
+            qx = (R[0, 1] + R[1, 0]) / S
+            qy = 0.25 * S
+            qz = (R[1, 2] + R[2, 1]) / S
+        else:
+            S = np.sqrt(1.0 + R[2, 2] - R[0, 0] - R[1, 1]) * 2
+            qw = (R[1, 0] - R[0, 1]) / S
+            qx = (R[0, 2] + R[2, 0]) / S
+            qy = (R[1, 2] + R[2, 1]) / S
+            qz = 0.25 * S
+
+        poses.append({
+            "frame_idx": pose.frame_idx,
+            "position": [round(float(t[0]), 6), round(float(t[1]), 6), round(float(t[2]), 6)],
+            "quaternion": [round(float(qx), 6), round(float(qy), 6), round(float(qz), 6), round(float(qw), 6)],
+            "inliers": int(pose.inliers_count),
+        })
+
+    data = {
+        "units": "relative",
+        "scale_notice": "Normalized translation vector (||t||=1.0). Coordinates in arbitrary units, not meters.",
+        "count": len(poses),
+        "poses": poses,
+    }
+    with open(output_path, "w") as f:
+        json.dump(data, f, indent=2)
+
+
+import json
+
+
+def report_progress(progress_json_path: Optional[str], stage: str, progress: float):
+    if not progress_json_path:
+        return
+    try:
+        tmp_path = progress_json_path + ".tmp"
+        with open(tmp_path, "w") as f:
+            json.dump({"stage": stage, "progress": round(progress, 3)}, f)
+        os.replace(tmp_path, progress_json_path)
+    except Exception:
+        pass
+
+
 def run_pipeline(
     video_path: str,
     camera_config_path: str,
@@ -91,6 +159,7 @@ def run_pipeline(
     max_frames: Optional[int] = None,
     frame_stride: int = 2,
     headless: bool = False,
+    progress_json: Optional[str] = None,
 ):
     print("=" * 70)
     print("  MONOCULAR 3D RECONSTRUCTION PROOF OF CONCEPT")
@@ -98,15 +167,46 @@ def run_pipeline(
     print("  SCALE NOTICE: All coordinates and trajectory points are in")
     print("  ARBITRARY RELATIVE UNITS due to monocular scale ambiguity (||t||=1).")
     print("  Do NOT interpret outputs as physical metric measurements.")
+    report_progress(progress_json, "extracting_frames", 0.05)
     print("=" * 70)
 
-    # 1. Load configurations
+    # 1. Load configurations and assess video
     os.makedirs(output_dir, exist_ok=True)
     cam_params = load_calibration(camera_config_path)
     pipe_cfg = load_yaml(pipeline_config_path)
 
+    # Validate input video against instruction.md
+    print("[Pipeline] Assessing video input quality against instruction.md...")
+    try:
+        assessor = VideoInputAssessor()
+        assessment = assessor.assess_video(video_path)
+        assessment_out_path = os.path.join(output_dir, "input_assessment.json")
+        with open(assessment_out_path, "w") as f:
+            json.dump(assessment, f, indent=2)
+        print(f"[Pipeline] Video Assessment: {assessment['resolution_quality']}, {assessment['fps']}fps, Sharpness: {assessment['sharpness_grade']} ({assessment['sharpness_score']}), Motion: {assessment['motion_type']}")
+        for w in assessment.get("warnings", []):
+            print(f"  [Input Warning] {w}")
+    except Exception as ex:
+        print(f"[Pipeline] Warning: Could not run input assessment: {ex}")
+
+    # Open video to check dimensions and scale K if needed
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        raise FileNotFoundError(f"Cannot open video source: {video_path}")
+
+    total_video_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    video_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    video_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    calib_w = cam_params.get("image_width", video_w)
+    calib_h = cam_params.get("image_height", video_h)
+
     K = cam_params["camera_matrix"]
     D = cam_params["dist_coeff"]
+
+    if video_w != calib_w or video_h != calib_h:
+        print(f"[Pipeline] Video resolution ({video_w}x{video_h}) differs from calibration ({calib_w}x{calib_h}). Dynamically scaling intrinsics K.")
+        K = scale_camera_matrix(K, calib_w, calib_h, video_w, video_h)
+
     print(f"[Pipeline] Loaded camera intrinsics K:\n{K}")
 
     # 2. Initialize modules
@@ -155,18 +255,12 @@ def run_pipeline(
     mesh_cfg = recon_cfg.get("meshing", {})
     mesh_builder = MeshBuilder(
         method=mesh_cfg.get("method", "poisson"),
-        poisson_depth=mesh_cfg.get("poisson_depth", 8),
+        poisson_depth=mesh_cfg.get("poisson_depth", 9),
         trim_density_percentile=mesh_cfg.get("trim_density_percentile", 0.05),
         bpa_radii=mesh_cfg.get("bpa_radii", [0.02, 0.04, 0.08]),
     )
 
-    # 3. Open Video Stream
-    cap = cv2.VideoCapture(video_path)
-    if not cap.isOpened():
-        raise FileNotFoundError(f"Cannot open video source: {video_path}")
-
-    total_video_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    print(f"[Pipeline] Opened video: {video_path} ({total_video_frames} total frames)")
+    print(f"[Pipeline] Processing video: {video_path} ({total_video_frames} total frames, {video_w}x{video_h})")
 
     raw_frame_idx = 0
     processed_count = 0
@@ -194,22 +288,28 @@ def run_pipeline(
         kp, des = tracker.extract(frame_bgr)
         print(f"  Detected {len(kp)} ORB features.")
 
+        curr_gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
+
         if processed_count == 0:
             # First keyframe at origin T_w_0 = I
-            depth_map = depth_estimator.estimate(frame_bgr)
+            depth_map = depth_estimator.estimate(frame_bgr, sharpen_edges=True)
             local_cloud = backprojector.backproject(frame_bgr, depth_map)
             print(f"  Frame 0: Backprojected {len(local_cloud.points)} initial points.")
             fusion.add_frame_cloud(local_cloud, pose_estimator.current_T_world_camera)
 
             prev_frame_bgr = frame_bgr
+            prev_gray = curr_gray
             prev_kp = kp
             prev_des = des
             processed_count += 1
             raw_frame_idx += 1
             continue
 
-        # Match with previous keyframe
-        match_res = tracker.match(prev_kp, prev_des, kp, des)
+        # Match with previous keyframe using sub-pixel refinement
+        match_res = tracker.match(
+            prev_kp, prev_des, kp, des,
+            frame1_gray=prev_gray, frame2_gray=curr_gray
+        )
         if match_res is None:
             print("  [Warning] Insufficient feature correspondences with previous keyframe. Skipping frame.")
             raw_frame_idx += 1
@@ -233,8 +333,8 @@ def run_pipeline(
         cam_pos = pose.camera_center
         print(f"  Camera Pose #{len(pose_estimator.trajectory)}: Pos=[{cam_pos[0]:.3f}, {cam_pos[1]:.3f}, {cam_pos[2]:.3f}] (Inliers: {pose.inliers_count})")
 
-        # Estimate depth map and backproject
-        depth_map = depth_estimator.estimate(frame_bgr)
+        # Estimate depth map with edge sharpening and backproject
+        depth_map = depth_estimator.estimate(frame_bgr, sharpen_edges=True)
         local_cloud = backprojector.backproject(frame_bgr, depth_map)
         print(f"  Backprojected {len(local_cloud.points)} 3D points.")
 
@@ -244,10 +344,14 @@ def run_pipeline(
 
         # Advance keyframe
         prev_frame_bgr = frame_bgr
+        prev_gray = curr_gray
         prev_kp = kp
         prev_des = des
         processed_count += 1
         raw_frame_idx += 1
+
+        pct = 0.10 + min(0.65, (raw_frame_idx / max(total_video_frames, 1)) * 0.65)
+        report_progress(progress_json, "depth", pct)
 
     cap.release()
     elapsed = time.time() - start_time
@@ -255,19 +359,27 @@ def run_pipeline(
     print(f"[Pipeline] Video processing finished in {elapsed:.2f}s ({processed_count} keyframes processed)")
 
     # 4. Filter and save fused point cloud
-    print("[Pipeline] Filtering point cloud outliers...")
-    fused_pcd = fusion.filter_outliers()
+    report_progress(progress_json, "fusion", 0.80)
+    print("[Pipeline] Filtering point cloud outliers and estimating surface normals...")
+    fusion.filter_outliers(enable_radius_filter=True)
     fusion.downsample()
+    fusion.estimate_normals()
+    fused_pcd = fusion.get_cloud()
     pcd_out_path = os.path.join(output_dir, "fused_point_cloud.ply")
     fusion.save(pcd_out_path)
     print(f"[Pipeline] Saved fused point cloud ({len(fused_pcd.points)} points) to: {pcd_out_path}")
 
-    # 5. Save trajectory
+    # 5. Save trajectory (TUM text format + JSON for Three.js web viewer)
     traj_out_path = os.path.join(output_dir, "camera_trajectory.txt")
     save_trajectory_tum_format(pose_estimator.trajectory, traj_out_path)
     print(f"[Pipeline] Saved camera trajectory to: {traj_out_path}")
 
+    traj_json_path = os.path.join(output_dir, "camera_trajectory.json")
+    save_trajectory_json_format(pose_estimator.trajectory, traj_json_path)
+    print(f"[Pipeline] Saved camera trajectory JSON to: {traj_json_path}")
+
     # 6. Reconstruct Surface Mesh
+    report_progress(progress_json, "mesh", 0.90)
     mesh = None
     if len(fused_pcd.points) >= 50:
         try:
@@ -296,6 +408,7 @@ def run_pipeline(
             frustum_scale=vis_cfg.get("frustum_scale", 0.15),
         )
 
+    report_progress(progress_json, "done", 1.0)
     print("[Pipeline] Pipeline execution complete!")
 
 
@@ -308,6 +421,7 @@ def main():
     parser.add_argument("--max-frames", type=int, default=None, help="Maximum number of frames to process")
     parser.add_argument("--frame-stride", type=int, default=2, help="Process every Nth video frame")
     parser.add_argument("--headless", action="store_true", help="Run without opening interactive 3D GUI window")
+    parser.add_argument("--progress-json", type=str, default=None, help="Path to write progress status JSON")
     args = parser.parse_args()
 
     run_pipeline(
@@ -318,6 +432,7 @@ def main():
         max_frames=args.max_frames,
         frame_stride=args.frame_stride,
         headless=args.headless,
+        progress_json=args.progress_json,
     )
 
 

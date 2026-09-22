@@ -83,6 +83,44 @@ def create_trajectory_lines(
     return line_set
 
 
+def create_ground_grid(
+    center_y: float = 0.5,
+    size: float = 3.0,
+    n_lines: int = 16,
+    color: List[float] = [0.2, 0.28, 0.38],
+) -> o3d.geometry.LineSet:
+    """
+    Creates a studio reference grid beneath the reconstructed object.
+    """
+    half = size / 2.0
+    step = size / n_lines
+    pts = []
+    lines = []
+
+    pt_idx = 0
+    # X lines
+    for i in range(n_lines + 1):
+        x = -half + i * step
+        pts.append([x, center_y, -half])
+        pts.append([x, center_y, half])
+        lines.append([pt_idx, pt_idx + 1])
+        pt_idx += 2
+
+    # Z lines
+    for j in range(n_lines + 1):
+        z = -half + j * step
+        pts.append([-half, center_y, z])
+        pts.append([half, center_y, z])
+        lines.append([pt_idx, pt_idx + 1])
+        pt_idx += 2
+
+    line_set = o3d.geometry.LineSet()
+    line_set.points = o3d.utility.Vector3dVector(np.array(pts, dtype=np.float64))
+    line_set.lines = o3d.utility.Vector2iVector(lines)
+    line_set.colors = o3d.utility.Vector3dVector([color for _ in range(len(lines))])
+    return line_set
+
+
 class Visualizer3D:
     def __init__(self, window_name: str = "3D Reconstruction & Camera Trajectory"):
         self.window_name = window_name
@@ -105,13 +143,21 @@ class Visualizer3D:
         coord_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.3, origin=[0, 0, 0])
         geometries.append(coord_frame)
 
+        # Ground reference grid
+        ground_y = 0.5
+        if point_cloud is not None and len(point_cloud.points) > 0:
+            pts_np = np.asarray(point_cloud.points)
+            ground_y = float(np.percentile(pts_np[:, 1], 95))
+        grid = create_ground_grid(center_y=ground_y, size=4.0, n_lines=20)
+        geometries.append(grid)
+
         # Add camera trajectory polyline
         if trajectory_points is not None and len(trajectory_points) >= 2:
             traj_lines = create_trajectory_lines(trajectory_points, color=[1.0, 0.1, 0.1])
             if traj_lines is not None:
                 geometries.append(traj_lines)
 
-        # Add camera frustums
+        # Add camera frustums along the arc
         if camera_poses is not None:
             for idx, T in enumerate(camera_poses):
                 if idx % frustum_stride == 0 or idx == len(camera_poses) - 1:

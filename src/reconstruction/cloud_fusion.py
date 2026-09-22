@@ -73,9 +73,9 @@ class PointCloudFusion:
         if len(self.fused_cloud.points) > 0 and self.voxel_size > 0:
             self.fused_cloud = self.fused_cloud.voxel_down_sample(voxel_size=self.voxel_size)
 
-    def filter_outliers(self) -> o3d.geometry.PointCloud:
+    def filter_outliers(self, enable_radius_filter: bool = True) -> o3d.geometry.PointCloud:
         """
-        Removes isolated noise points using statistical outlier removal.
+        Removes isolated noise and floating points using dual statistical and radius outlier removal.
 
         Returns:
             Filtered Open3D PointCloud.
@@ -83,12 +83,34 @@ class PointCloudFusion:
         if len(self.fused_cloud.points) < self.outlier_nb_neighbors:
             return self.fused_cloud
 
-        cl, ind = self.fused_cloud.remove_statistical_outlier(
+        # 1. Statistical outlier removal for density-based noise
+        cl, _ = self.fused_cloud.remove_statistical_outlier(
             nb_neighbors=self.outlier_nb_neighbors,
             std_ratio=self.outlier_std_ratio,
         )
         self.fused_cloud = cl
+
+        # 2. Radius outlier removal for floating depth artifacts
+        if enable_radius_filter and len(self.fused_cloud.points) > 50:
+            radius = max(0.05, self.voxel_size * 3.5)
+            min_pts = max(6, int(self.outlier_nb_neighbors * 0.4))
+            cl_rad, _ = self.fused_cloud.remove_radius_outlier(
+                nb_points=min_pts,
+                radius=radius,
+            )
+            self.fused_cloud = cl_rad
+
         return self.fused_cloud
+
+    def estimate_normals(self, max_nn: int = 30) -> None:
+        """Estimates and orientates surface normals for the fused point cloud."""
+        if len(self.fused_cloud.points) < 10:
+            return
+        radius = max(0.04, self.voxel_size * 2.5)
+        self.fused_cloud.estimate_normals(
+            search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=radius, max_nn=max_nn)
+        )
+        self.fused_cloud.orient_normals_consistent_tangent_plane(k=15)
 
     def get_cloud(self) -> o3d.geometry.PointCloud:
         """Returns the current fused point cloud."""

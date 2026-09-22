@@ -1,0 +1,411 @@
+{% block title %}Job {{ job.id }} | Minab{% endblock %}
+
+{% extends "base.html" %}
+
+{% block extra_head %}
+<!-- Three.js and Loaders CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/PLYLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+    <!-- Header -->
+    <div class="flex items-center justify-between flat-panel rounded-xl p-4 sm:p-5">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-slate-400 mb-1">
+                <a href="/" class="hover:text-white flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    Dashboard
+                </a>
+                <span>/</span>
+                <span class="text-slate-300 font-mono">{{ job.id }}</span>
+            </div>
+            <h1 class="text-lg font-bold text-white flex items-center gap-3">
+                <span>{{ job.dataset_filename or 'source.mp4' }}</span>
+                <span id="jobStatusBadge" class="text-xs px-2 py-0.5 rounded font-semibold border
+                    {% if job.status == 'done' %}bg-emerald-950 text-emerald-400 border-emerald-800
+                    {% elif job.status == 'running' %}bg-blue-950 text-blue-400 border-blue-800
+                    {% elif job.status == 'failed' %}bg-rose-950 text-rose-400 border-rose-800
+                    {% else %}bg-slate-800 text-slate-400 border-slate-700{% endif %}">
+                    {{ job.status|upper }}
+                </span>
+            </h1>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="/" class="px-3 py-1.5 rounded text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors">
+                Back
+            </a>
+            {% if job.status == 'failed' or result %}
+            <button id="retryBtn" class="px-3 py-1.5 rounded text-xs font-medium text-blue-300 bg-blue-950 hover:bg-blue-900 border border-blue-800 transition-colors flex items-center gap-1">
+                Retry
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Progress Card -->
+    <div id="progressCard" class="flat-panel rounded-xl p-5 space-y-3 {% if job.status == 'done' %}hidden{% endif %}">
+        <div class="flex items-center justify-between text-xs">
+            <div class="font-bold text-white flex items-center gap-2">
+                <span id="runningSpinner" class="w-3.5 h-3.5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin {% if job.status != 'running' %}hidden{% endif %}"></span>
+                <span id="stageLabel">Stage: {{ job.stage or 'queued' }}</span>
+            </div>
+            <span id="progressPctText" class="font-mono font-bold text-blue-400 text-base">
+                {{ (job.progress * 100)|round|int }}%
+            </span>
+        </div>
+
+        <div class="w-full bg-slate-900 rounded h-2 overflow-hidden border border-slate-800">
+            <div id="progressBarFill" class="bg-blue-600 h-2 rounded transition-all duration-300" style="width: {{ (job.progress * 100)|round|int }}%"></div>
+        </div>
+
+        <!-- Stage Pills -->
+        <div class="grid grid-cols-5 gap-2 text-center text-[11px] font-medium text-slate-400 pt-1">
+            <div id="stage-extracting_frames" class="p-1.5 rounded bg-slate-900 border border-slate-800">1. Frames</div>
+            <div id="stage-pose" class="p-1.5 rounded bg-slate-900 border border-slate-800">2. Pose</div>
+            <div id="stage-depth" class="p-1.5 rounded bg-slate-900 border border-slate-800">3. Depth</div>
+            <div id="stage-fusion" class="p-1.5 rounded bg-slate-900 border border-slate-800">4. Fusion</div>
+            <div id="stage-mesh" class="p-1.5 rounded bg-slate-900 border border-slate-800">5. Mesh</div>
+        </div>
+    </div>
+
+    <!-- Failure Card -->
+    <div id="errorCard" class="flat-panel rounded-xl p-5 border-l-4 border-rose-500 space-y-2 {% if job.status != 'failed' %}hidden{% endif %}">
+        <div class="text-rose-400 font-bold text-xs">
+            Pipeline Error
+        </div>
+        <pre id="errorText" class="text-xs text-rose-300 bg-rose-950/60 p-3 rounded font-mono overflow-x-auto border border-rose-900 whitespace-pre-wrap">{{ job.error }}</pre>
+    </div>
+
+    <!-- Input Quality Assessment Card (From instruction.md verification) -->
+    <div id="qualityCard" class="flat-panel rounded-xl p-5 space-y-3 hidden border-l-4 border-emerald-500">
+        <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-white flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Camera Input Assessment & Quality Metrics
+            </h3>
+            <span id="qualityComplianceBadge" class="text-[11px] px-2 py-0.5 rounded font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800">
+                Instruction Compliant
+            </span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div class="bg-slate-900 p-2.5 rounded border border-slate-800">
+                <span class="text-[11px] text-slate-400 block mb-0.5">Resolution</span>
+                <span id="stat-res" class="font-mono font-bold text-slate-200">1280x720 (720p)</span>
+            </div>
+            <div class="bg-slate-900 p-2.5 rounded border border-slate-800">
+                <span class="text-[11px] text-slate-400 block mb-0.5">Duration & FPS</span>
+                <span id="stat-fps" class="font-mono font-bold text-slate-200">10.0s @ 30fps</span>
+            </div>
+            <div class="bg-slate-900 p-2.5 rounded border border-slate-800">
+                <span class="text-[11px] text-slate-400 block mb-0.5">Sharpness (Focus)</span>
+                <span id="stat-sharpness" class="font-mono font-bold text-emerald-400">Crisp & Sharp</span>
+            </div>
+            <div class="bg-slate-900 p-2.5 rounded border border-slate-800">
+                <span class="text-[11px] text-slate-400 block mb-0.5">Motion Parallax</span>
+                <span id="stat-motion" class="font-mono font-bold text-blue-400">Smooth Arc</span>
+            </div>
+        </div>
+
+        <!-- Notes / Warnings list if any -->
+        <div id="qualityNotesContainer" class="space-y-1 text-[11px]"></div>
+    </div>
+
+    <!-- 3D Interactive Result Viewer Container -->
+    <div id="resultCard" class="space-y-4 {% if job.status != 'done' %}hidden{% endif %}">
+        
+        <!-- Viewport & Controls Toolbar -->
+        <div class="flat-panel rounded-xl overflow-hidden relative border border-slate-800">
+            
+            <!-- Controls Toolbar -->
+            <div class="bg-slate-900/95 border-b border-slate-800 p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <!-- Layer Toggles -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <label class="flex items-center gap-1.5 cursor-pointer select-none text-slate-300 hover:text-white">
+                        <input type="checkbox" id="chkMesh" checked class="rounded border-slate-700 text-blue-600 focus:ring-0">
+                        <span>Mesh</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer select-none text-slate-300 hover:text-white">
+                        <input type="checkbox" id="chkCloud" checked class="rounded border-slate-700 text-blue-600 focus:ring-0">
+                        <span>Point Cloud</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer select-none text-slate-300 hover:text-white">
+                        <input type="checkbox" id="chkTraj" checked class="rounded border-slate-700 text-pink-600 focus:ring-0">
+                        <span>Camera Arc</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer select-none text-slate-300 hover:text-white">
+                        <input type="checkbox" id="chkFrustums" checked class="rounded border-slate-700 text-cyan-600 focus:ring-0">
+                        <span>Frustums</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer select-none text-slate-300 hover:text-white">
+                        <input type="checkbox" id="chkGrid" checked class="rounded border-slate-700 text-blue-600 focus:ring-0">
+                        <span>Studio Grid</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer select-none text-slate-300 hover:text-white">
+                        <input type="checkbox" id="chkWired" class="rounded border-slate-700 text-amber-600 focus:ring-0">
+                        <span>Wireframe</span>
+                    </label>
+                </div>
+
+                <!-- Point Size Slider & Camera Presets -->
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] text-slate-400">Point Size:</span>
+                        <input type="range" id="pointSizeSlider" min="0.005" max="0.08" step="0.005" value="0.025" class="w-16 accent-blue-500 cursor-pointer">
+                    </div>
+
+                    <!-- View Buttons -->
+                    <div class="flex items-center gap-1 bg-slate-950 p-0.5 rounded border border-slate-800">
+                        <button id="btnResetView" title="Reset Camera View" class="px-2 py-0.5 rounded text-[11px] text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">
+                            Reset
+                        </button>
+                        <button id="btnTopView" title="Top-Down View" class="px-2 py-0.5 rounded text-[11px] text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">
+                            Top
+                        </button>
+                        <button id="btnFrontView" title="Front Level View" class="px-2 py-0.5 rounded text-[11px] text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">
+                            Front
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Overlay Bar -->
+            <div class="absolute top-14 right-3 z-10 bg-slate-900/85 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-800 flex items-center gap-3 text-[11px]">
+                <div class="flex items-center gap-1">
+                    <span class="text-slate-400">Points:</span>
+                    <span id="stat-points-count" class="font-mono text-blue-400 font-bold">-</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <span class="text-slate-400">Triangles:</span>
+                    <span id="stat-triangles-count" class="font-mono text-emerald-400 font-bold">-</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <span class="text-slate-400">Poses:</span>
+                    <span id="stat-trajectory-count" class="font-mono text-pink-400 font-bold">-</span>
+                </div>
+            </div>
+
+            <!-- 3D Canvas -->
+            <div id="viewerCanvasContainer" class="w-full h-[540px] bg-slate-950"></div>
+        </div>
+
+        <!-- Download & Artifact Files Card -->
+        <div class="flat-panel rounded-xl p-5 space-y-3">
+            <h3 class="text-xs font-bold text-white">Reconstruction Artifacts & Exports</h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="downloadLinks">
+                {% if result %}
+                <a href="/files/{{ result.id }}/reconstructed_mesh.ply" download class="p-3 rounded bg-slate-900 border border-slate-800 hover:border-blue-500 transition-colors flex items-center justify-between text-xs group">
+                    <div>
+                        <div class="font-bold text-slate-200 group-hover:text-blue-400">Colored Mesh (.ply)</div>
+                        <span class="text-[10px] text-slate-500">Surface mesh with vertex colors</span>
+                    </div>
+                    <svg class="w-4 h-4 text-slate-400 group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </a>
+                <a href="/files/{{ result.id }}/reconstructed_mesh.obj" download class="p-3 rounded bg-slate-900 border border-slate-800 hover:border-blue-500 transition-colors flex items-center justify-between text-xs group">
+                    <div>
+                        <div class="font-bold text-slate-200 group-hover:text-blue-400">Wavefront Mesh (.obj)</div>
+                        <span class="text-[10px] text-slate-500">Standard 3D geometry export</span>
+                    </div>
+                    <svg class="w-4 h-4 text-slate-400 group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </a>
+                <a href="/files/{{ result.id }}/fused_point_cloud.ply" download class="p-3 rounded bg-slate-900 border border-slate-800 hover:border-blue-500 transition-colors flex items-center justify-between text-xs group">
+                    <div>
+                        <div class="font-bold text-slate-200 group-hover:text-blue-400">Point Cloud (.ply)</div>
+                        <span class="text-[10px] text-slate-500">Dense filtered RGB point cloud</span>
+                    </div>
+                    <svg class="w-4 h-4 text-slate-400 group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </a>
+                <a href="/files/{{ result.id }}/camera_trajectory.json" download class="p-3 rounded bg-slate-900 border border-slate-800 hover:border-blue-500 transition-colors flex items-center justify-between text-xs group">
+                    <div>
+                        <div class="font-bold text-slate-200 group-hover:text-blue-400">Trajectory JSON</div>
+                        <span class="text-[10px] text-slate-500">Poses with orientation quaternions</span>
+                    </div>
+                    <svg class="w-4 h-4 text-slate-400 group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </a>
+                <a href="/files/{{ result.id }}/camera_trajectory.txt" download class="p-3 rounded bg-slate-900 border border-slate-800 hover:border-blue-500 transition-colors flex items-center justify-between text-xs group">
+                    <div>
+                        <div class="font-bold text-slate-200 group-hover:text-blue-400">TUM Trajectory (.txt)</div>
+                        <span class="text-[10px] text-slate-500">Standard benchmark trajectory</span>
+                    </div>
+                    <svg class="w-4 h-4 text-slate-400 group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </a>
+                <a href="/files/{{ result.id }}/input_assessment.json" download class="p-3 rounded bg-slate-900 border border-slate-800 hover:border-blue-500 transition-colors flex items-center justify-between text-xs group">
+                    <div>
+                        <div class="font-bold text-slate-200 group-hover:text-blue-400">Quality Assessment (.json)</div>
+                        <span class="text-[10px] text-slate-500">instruction.md validation metrics</span>
+                    </div>
+                    <svg class="w-4 h-4 text-slate-400 group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/viewer.js"></script>
+<script>
+    const jobId = "{{ job.id }}";
+    let currentStatus = "{{ job.status }}";
+    let resultId = "{{ job.result_id or '' }}";
+    let viewer = null;
+
+    // Retry job button handler
+    const retryBtn = document.getElementById('retryBtn');
+    if (retryBtn) {
+        retryBtn.addEventListener('click', async () => {
+            if (!confirm("Re-enqueue a new reconstruction job for this dataset?")) return;
+            try {
+                const resp = await fetch(`/api/jobs/${jobId}/retry`, { method: 'POST' });
+                const data = await resp.json();
+                if (resp.ok && data.job_id) {
+                    window.location.href = `/jobs/${data.job_id}`;
+                } else {
+                    alert("Retry failed: " + (data.error || "Unknown error"));
+                }
+            } catch(e) {
+                alert("Retry error: " + e.message);
+            }
+        });
+    }
+
+    // Load and display input assessment metrics
+    async function loadQualityAssessment(resId) {
+        if (!resId) return;
+        try {
+            const resp = await fetch(`/files/${resId}/input_assessment.json`);
+            if (!resp.ok) return;
+            const data = await resp.json();
+
+            const card = document.getElementById('qualityCard');
+            if (!card) return;
+            card.classList.remove('hidden');
+
+            document.getElementById('stat-res').innerText = `${data.resolution_label || '720p'} (${data.resolution_quality || 'Good'})`;
+            document.getElementById('stat-fps').innerText = `${data.duration_sec}s @ ${data.fps}fps`;
+            document.getElementById('stat-sharpness').innerText = `${data.sharpness_grade} (${data.sharpness_score})`;
+            document.getElementById('stat-motion').innerText = `${data.motion_type} (${data.parallax_score}px)`;
+
+            const badge = document.getElementById('qualityComplianceBadge');
+            if (data.is_compliant) {
+                badge.className = "text-[11px] px-2 py-0.5 rounded font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800";
+                badge.innerText = "Instruction Compliant";
+            } else {
+                badge.className = "text-[11px] px-2 py-0.5 rounded font-semibold bg-amber-950 text-amber-400 border border-amber-800";
+                badge.innerText = "Check Capture Tips";
+            }
+
+            const notesEl = document.getElementById('qualityNotesContainer');
+            let notesHtml = '';
+            if (data.passed_checks && data.passed_checks.length > 0) {
+                notesHtml += data.passed_checks.slice(0, 3).map(c => `<div class="text-emerald-400 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>${c}</div>`).join('');
+            }
+            if (data.warnings && data.warnings.length > 0) {
+                notesHtml += data.warnings.map(w => `<div class="text-amber-400 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>${w}</div>`).join('');
+            }
+            notesEl.innerHTML = notesHtml;
+
+        } catch (e) {
+            console.debug("Assessment not available yet:", e);
+        }
+    }
+
+    // Initialize 3D viewer
+    function initViewer(resId) {
+        if (viewer || !resId) return;
+
+        viewer = new Minab3DViewer('viewerCanvasContainer', {
+            resultId: resId,
+            meshPlyUrl: `/files/${resId}/reconstructed_mesh.ply`,
+            meshObjUrl: `/files/${resId}/reconstructed_mesh.obj`,
+            pointCloudUrl: `/files/${resId}/fused_point_cloud.ply`,
+            trajectoryJsonUrl: `/files/${resId}/camera_trajectory.json`,
+            trajectoryUrl: `/files/${resId}/camera_trajectory.txt`
+        });
+
+        // Layer control event listeners
+        const layerControls = [
+            { id: 'chkMesh', fn: (v) => viewer.toggleMesh(v) },
+            { id: 'chkCloud', fn: (v) => viewer.togglePointCloud(v) },
+            { id: 'chkTraj', fn: (v) => viewer.toggleTrajectory(v) },
+            { id: 'chkFrustums', fn: (v) => viewer.toggleFrustums(v) },
+            { id: 'chkGrid', fn: (v) => viewer.toggleGrid(v) },
+            { id: 'chkWired', fn: (v) => viewer.setWireframe(v) },
+        ];
+
+        layerControls.forEach(ctrl => {
+            const el = document.getElementById(ctrl.id);
+            if (el) {
+                el.addEventListener('change', (e) => ctrl.fn(e.target.checked));
+            }
+        });
+
+        // Point size slider
+        const slider = document.getElementById('pointSizeSlider');
+        if (slider) {
+            slider.addEventListener('input', (e) => viewer.setPointSize(parseFloat(e.target.value)));
+        }
+
+        // Camera viewpoint buttons
+        const btnReset = document.getElementById('btnResetView');
+        if (btnReset) btnReset.addEventListener('click', () => viewer.resetView());
+
+        const btnTop = document.getElementById('btnTopView');
+        if (btnTop) btnTop.addEventListener('click', () => viewer.topView());
+
+        const btnFront = document.getElementById('btnFrontView');
+        if (btnFront) btnFront.addEventListener('click', () => viewer.frontView());
+
+        // Load quality assessment
+        loadQualityAssessment(resId);
+    }
+
+    if (currentStatus === 'done' && resultId) {
+        initViewer(resultId);
+    }
+
+    // Polling /api/jobs/<jobId> every 1 second if queued or running
+    if (currentStatus === 'queued' || currentStatus === 'running') {
+        const timer = setInterval(async () => {
+            try {
+                const resp = await fetch(`/api/jobs/${jobId}`);
+                if (!resp.ok) return;
+                const jobData = await resp.json();
+
+                // Update UI elements
+                const pct = Math.round((jobData.progress || 0) * 100);
+                document.getElementById('progressBarFill').style.width = pct + '%';
+                document.getElementById('progressPctText').innerText = pct + '%';
+                document.getElementById('stageLabel').innerText = 'Stage: ' + (jobData.stage || 'running');
+
+                // Highlight active stage pill
+                const stages = ['extracting_frames', 'pose', 'depth', 'fusion', 'mesh'];
+                stages.forEach(st => {
+                    const el = document.getElementById('stage-' + st);
+                    if (el) {
+                        if (jobData.stage === st) {
+                            el.className = "p-1.5 rounded bg-blue-950 border border-blue-600 text-blue-300 font-bold";
+                        } else {
+                            el.className = "p-1.5 rounded bg-slate-900 border border-slate-800 text-slate-500";
+                        }
+                    }
+                });
+
+                if (jobData.status === 'done' || jobData.status === 'failed') {
+                    clearInterval(timer);
+                    location.reload();
+                }
+            } catch (err) {
+                console.warn("Polling error:", err);
+            }
+        }, 1000);
+    }
+</script>
+{% endblock %}

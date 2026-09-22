@@ -52,17 +52,51 @@ class DepthEstimator:
         self.model.eval()
         print("[DepthEstimator] Model loaded successfully.")
 
+    def refine_depth_edges(
+        self,
+        norm_depth: np.ndarray,
+        guide_image: np.ndarray,
+        radius: int = 6,
+        eps: float = 1e-3,
+    ) -> np.ndarray:
+        """
+        Sharpens depth boundaries using guided filtering with the RGB frame as guidance.
+        Aligns depth discontinuities to true object edges, eliminating depth halos.
+        """
+        if len(guide_image.shape) == 3:
+            guide_gray = cv2.cvtColor(guide_image, cv2.COLOR_RGB2GRAY)
+        else:
+            guide_gray = guide_image
+
+        if guide_gray.shape[:2] != norm_depth.shape[:2]:
+            guide_gray = cv2.resize(guide_gray, (norm_depth.shape[1], norm_depth.shape[0]), interpolation=cv2.INTER_LINEAR)
+
+        try:
+            filtered = cv2.ximgproc.guidedFilter(
+                guide=guide_gray,
+                src=norm_depth.astype(np.float32),
+                radius=radius,
+                eps=eps,
+            )
+            return np.clip(filtered, 0.0, 1.0)
+        except Exception:
+            norm_u8 = (norm_depth * 255.0).astype(np.uint8)
+            bilat = cv2.bilateralFilter(norm_u8, d=7, sigmaColor=50, sigmaSpace=7)
+            return bilat.astype(np.float32) / 255.0
+
     def estimate(
         self,
         image: Union[np.ndarray, Image.Image],
         target_size: Optional[Tuple[int, int]] = None,
+        sharpen_edges: bool = True,
     ) -> np.ndarray:
         """
-        Estimates a 2D relative depth map from an input RGB image.
+        Estimates a 2D relative depth map from an input RGB image with edge sharpening.
 
         Args:
             image: BGR/RGB numpy array (HxWx3) or PIL Image.
             target_size: Optional (width, height) to resize output depth map. If None, matches input image size.
+            sharpen_edges: If True, applies edge-guided depth sharpening using RGB guidance.
 
         Returns:
             2D float32 numpy array (HxW) with scaled relative depth values in [relative_depth_min, relative_depth_max].
@@ -77,6 +111,7 @@ class DepthEstimator:
             orig_w, orig_h = image.shape[1], image.shape[0]
         else:
             pil_image = image
+            rgb_image = np.array(pil_image)
             orig_w, orig_h = pil_image.size
 
         # Preprocess image
@@ -104,6 +139,10 @@ class DepthEstimator:
             norm_depth = np.clip((depth_np - d_min) / (d_max - d_min), 0.0, 1.0)
         else:
             norm_depth = np.zeros_like(depth_np)
+
+        # Edge-guided sharpening using RGB guidance
+        if sharpen_edges:
+            norm_depth = self.refine_depth_edges(norm_depth, rgb_image)
 
         # Note: In Depth-Anything-V2, higher raw values correspond to nearer surfaces (disparity-like).
         # We invert so that 0 is near and 1 is far, then scale to [relative_depth_min, relative_depth_max].
