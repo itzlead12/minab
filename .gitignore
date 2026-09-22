@@ -44,6 +44,9 @@ desktop.ini
 # Project Data & Output artifacts
 data/output/*
 !data/output/.gitkeep
+data/output_test/
+data/input_videos/*
+!data/input_videos/.gitkeep
 
 # Logs and temporary files
 *.log
