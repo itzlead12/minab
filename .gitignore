@@ -48,7 +48,8 @@ data/output_test/
 data/input_videos/*
 !data/input_videos/.gitkeep
 
-# Logs and temporary files
-*.log
-*.tmp
-*.temp
+# Modular Workstation directories
+3d-module/
+uav-module/
+operation-module/
+website-module/
