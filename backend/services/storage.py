@@ -36,15 +36,10 @@ def save_uploaded_video(dataset_id: str, file_obj, filename: str) -> str:
     dest_path = os.path.join(dataset_dir, "source.mp4")
     file_obj.save(dest_path)
 
-    # Write meta.json & stub telemetry.csv
+    # Write meta.json
     meta_path = os.path.join(dataset_dir, "meta.json")
     with open(meta_path, "w") as f:
         import json
         json.dump({"source_type": "upload", "original_filename": filename}, f)
-
-    telemetry_path = os.path.join(dataset_dir, "telemetry.csv")
-    if not os.path.exists(telemetry_path):
-        with open(telemetry_path, "w") as f:
-            f.write("# Stub telemetry file for upload dataset\n")
 
     return dest_path

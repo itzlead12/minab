@@ -29,7 +29,7 @@ def get_job(job_id: str):
     cursor = conn.cursor()
     cursor.execute(
         """
-        SELECT j.*, d.filename as dataset_filename, d.source_type, d.has_telemetry
+        SELECT j.*, d.filename as dataset_filename, d.source_type
         FROM jobs j
         JOIN datasets d ON j.dataset_id = d.id
         WHERE j.id = ?

@@ -1,7 +1,7 @@
 /**
- * Minab 3D Reconstruction Viewer
- * Renders Monocular 3D Meshes, Point Clouds, Camera Trajectories, and Frustums using Three.js
- * Designed according to instruction.md specifications for orbit-based monocular reconstruction.
+ * Minab 3D Reconstruction Studio Viewer
+ * Three.js Viewer supporting Meshes (PLY/OBJ), Dense Point Clouds (PLY),
+ * Camera Trajectories, and Frustums in Arbitrary Relative Coordinates.
  */
 
 class Minab3DViewer {
@@ -33,6 +33,7 @@ class Minab3DViewer {
         this.showTrajectory = true;
         this.showFrustums = true;
         this.showGrid = true;
+        this.showAxes = true;
         this.wireframeMode = false;
         this.pointSize = 0.025;
 
@@ -45,15 +46,15 @@ class Minab3DViewer {
 
     initScene() {
         const width = this.container.clientWidth || 800;
-        const height = this.container.clientHeight || 520;
+        const height = this.container.clientHeight || 540;
 
         // Scene
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x080c18); // deep slate studio bg
+        this.scene.background = new THREE.Color(0x05070a);
 
         // Camera
-        this.camera = new THREE.PerspectiveCamera(55, width / height, 0.01, 1000);
-        this.camera.position.set(0.0, 1.2, 3.2);
+        this.camera = new THREE.PerspectiveCamera(50, width / height, 0.01, 1000);
+        this.camera.position.set(0.0, 1.2, 2.4);
 
         // WebGL Renderer
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
@@ -71,50 +72,48 @@ class Minab3DViewer {
             this.controls.enableDamping = true;
             this.controls.dampingFactor = 0.06;
             this.controls.screenSpacePanning = true;
+            this.controls.target.set(0, 0, 0);
             this.controls.maxDistance = 25;
-            this.controls.minDistance = 0.1;
+            this.controls.minDistance = 0.05;
         }
 
         // Studio Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
         this.scene.add(ambientLight);
 
-        const keyLight = new THREE.DirectionalLight(0xffffff, 0.85);
-        keyLight.position.set(5, 8, 5);
+        const keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
+        keyLight.position.set(4, 6, 4);
         this.scene.add(keyLight);
 
-        const fillLight = new THREE.DirectionalLight(0x60a5fa, 0.45);
-        fillLight.position.set(-5, -3, -5);
+        const fillLight = new THREE.DirectionalLight(0x3b82f6, 0.4);
+        fillLight.position.set(-4, -2, -4);
         this.scene.add(fillLight);
 
-        const rimLight = new THREE.DirectionalLight(0x38bdf8, 0.3);
-        rimLight.position.set(0, -6, 4);
+        const rimLight = new THREE.DirectionalLight(0x60a5fa, 0.35);
+        rimLight.position.set(0, 5, -5);
         this.scene.add(rimLight);
 
         // Studio Ground Grid
-        this.gridHelper = new THREE.GridHelper(8, 24, 0x3b82f6, 0x1e293b);
+        this.gridHelper = new THREE.GridHelper(6, 24, 0x2563eb, 0x18232f);
         this.gridHelper.position.y = -0.5;
         this.scene.add(this.gridHelper);
 
-        this.axesHelper = new THREE.AxesHelper(0.5);
+        this.axesHelper = new THREE.AxesHelper(0.4);
         this.axesHelper.position.set(0, -0.49, 0);
         this.scene.add(this.axesHelper);
     }
 
-    async loadArtifacts() {
-        // 1. Try loading colored PLY mesh first, fallback to OBJ
+    loadArtifacts() {
         if (this.meshPlyUrl) {
             this.loadMeshPly(this.meshPlyUrl);
         } else if (this.meshObjUrl) {
             this.loadMeshObj(this.meshObjUrl);
         }
 
-        // 2. Load dense point cloud
         if (this.pointCloudUrl) {
             this.loadPointCloud(this.pointCloudUrl);
         }
 
-        // 3. Load trajectory and camera frustums (JSON preferred, fallback to TXT)
         if (this.trajectoryJsonUrl) {
             this.loadTrajectoryJson(this.trajectoryJsonUrl);
         } else if (this.trajectoryTxtUrl) {
@@ -123,123 +122,114 @@ class Minab3DViewer {
     }
 
     loadMeshPly(url) {
-        if (typeof THREE.PLYLoader === 'undefined') {
-            if (this.meshObjUrl) this.loadMeshObj(this.meshObjUrl);
-            return;
-        }
-
+        if (!THREE.PLYLoader) return;
         const loader = new THREE.PLYLoader();
-        loader.load(
-            url,
-            (geometry) => {
-                geometry.computeVertexNormals();
-                const hasColors = geometry.attributes.color !== undefined;
+        loader.load(url, (geometry) => {
+            geometry.computeVertexNormals();
 
-                const material = new THREE.MeshStandardMaterial({
-                    vertexColors: hasColors,
-                    color: hasColors ? 0xffffff : 0xd1d5db,
-                    roughness: 0.45,
-                    metalness: 0.08,
-                    side: THREE.DoubleSide,
-                    wireframe: this.wireframeMode
-                });
-
-                this.meshObject = new THREE.Mesh(geometry, material);
-                this.scene.add(this.meshObject);
-                this.updateMeshStats(geometry);
-            },
-            undefined,
-            (err) => {
-                console.warn("PLY mesh load failed, falling back to OBJ:", err);
-                if (this.meshObjUrl) this.loadMeshObj(this.meshObjUrl);
+            if (this.meshObject) {
+                this.scene.remove(this.meshObject);
             }
-        );
+
+            let material;
+            if (geometry.hasAttribute('color')) {
+                material = new THREE.MeshStandardMaterial({
+                    vertexColors: true,
+                    roughness: 0.5,
+                    metalness: 0.1,
+                    wireframe: this.wireframeMode,
+                    side: THREE.DoubleSide
+                });
+            } else {
+                material = new THREE.MeshStandardMaterial({
+                    color: 0x94a3b8,
+                    roughness: 0.6,
+                    metalness: 0.2,
+                    wireframe: this.wireframeMode,
+                    side: THREE.DoubleSide
+                });
+            }
+            this.meshObject = new THREE.Mesh(geometry, material);
+            this.meshObject.visible = this.showMesh;
+            this.scene.add(this.meshObject);
+            this.updateMeshStats(geometry);
+        }, undefined, (e) => {
+            console.warn("PLY mesh load failed, trying OBJ:", e);
+            if (this.meshObjUrl) this.loadMeshObj(this.meshObjUrl);
+        });
     }
 
     loadMeshObj(url) {
-        if (typeof THREE.OBJLoader === 'undefined') return;
-
+        if (!THREE.OBJLoader) return;
         const loader = new THREE.OBJLoader();
-        loader.load(
-            url,
-            (obj) => {
-                const material = new THREE.MeshStandardMaterial({
-                    color: 0xe2e8f0,
-                    roughness: 0.45,
-                    metalness: 0.1,
-                    side: THREE.DoubleSide,
-                    wireframe: this.wireframeMode
-                });
-
-                obj.traverse((child) => {
-                    if (child.isMesh) {
-                        child.material = material;
-                        child.geometry.computeVertexNormals();
-                        this.updateMeshStats(child.geometry);
-                    }
-                });
-
-                this.meshObject = obj;
-                this.scene.add(this.meshObject);
-            },
-            undefined,
-            (err) => console.warn("OBJ mesh load failed:", err)
-        );
+        loader.load(url, (object) => {
+            if (this.meshObject) {
+                this.scene.remove(this.meshObject);
+            }
+            this.meshObject = object;
+            object.traverse((child) => {
+                if (child.isMesh) {
+                    child.material = new THREE.MeshStandardMaterial({
+                        color: 0x94a3b8,
+                        roughness: 0.5,
+                        metalness: 0.1,
+                        wireframe: this.wireframeMode,
+                        side: THREE.DoubleSide
+                    });
+                }
+            });
+            this.meshObject.visible = this.showMesh;
+            this.scene.add(this.meshObject);
+        }, undefined, (err) => {
+            console.debug("OBJ mesh load notice:", err);
+        });
     }
 
     loadPointCloud(url) {
-        if (typeof THREE.PLYLoader === 'undefined') return;
-
+        if (!THREE.PLYLoader) return;
         const loader = new THREE.PLYLoader();
-        loader.load(
-            url,
-            (geometry) => {
-                geometry.computeVertexNormals();
-                const hasColors = geometry.attributes.color !== undefined;
+        loader.load(url, (geometry) => {
+            if (this.pointCloudObject) {
+                this.scene.remove(this.pointCloudObject);
+            }
 
-                const material = new THREE.PointsMaterial({
+            let material;
+            if (geometry.hasAttribute('color')) {
+                material = new THREE.PointsMaterial({
                     size: this.pointSize,
-                    vertexColors: hasColors,
-                    color: hasColors ? 0xffffff : 0x38bdf8,
+                    vertexColors: true,
                     sizeAttenuation: true
                 });
-
-                this.pointCloudObject = new THREE.Points(geometry, material);
-                this.scene.add(this.pointCloudObject);
-
-                // Auto-align ground grid to bottom of scene
-                geometry.computeBoundingBox();
-                if (geometry.boundingBox) {
-                    const minY = geometry.boundingBox.min.y;
-                    this.gridHelper.position.y = minY - 0.02;
-                    this.axesHelper.position.y = minY - 0.02;
-                }
-
-                this.updatePointStats(geometry);
-            },
-            undefined,
-            (err) => console.warn("PointCloud PLY load failed:", err)
-        );
+            } else {
+                material = new THREE.PointsMaterial({
+                    size: this.pointSize,
+                    color: 0x60a5fa,
+                    sizeAttenuation: true
+                });
+            }
+            this.pointCloudObject = new THREE.Points(geometry, material);
+            this.pointCloudObject.visible = this.showPointCloud;
+            this.scene.add(this.pointCloudObject);
+            this.updatePointStats(geometry);
+        }, undefined, (err) => {
+            console.debug("Point cloud load notice:", err);
+        });
     }
 
     createCameraFrustumGeometry(scale = 0.12) {
         const w = scale * 0.7;
-        const h = scale * 0.5;
-        const z = scale;
+        const h = scale * 0.45;
+        const z = scale * 1.0;
 
-        // Camera apex at origin (0,0,0), base rectangle at +z
         const vertices = new Float32Array([
-            // Rays from apex to base corners
             0, 0, 0,  -w, -h, z,
             0, 0, 0,   w, -h, z,
             0, 0, 0,   w,  h, z,
             0, 0, 0,  -w,  h, z,
-            // Perimeter rectangle
             -w, -h, z,   w, -h, z,
              w, -h, z,   w,  h, z,
              w,  h, z,  -w,  h, z,
             -w,  h, z,  -w, -h, z,
-            // Top orientation tick (indicates camera UP direction)
             0, -h, z,   0, -h - (h * 0.4), z
         ]);
 
@@ -261,15 +251,15 @@ class Minab3DViewer {
 
             const points = [];
             this.frustumsGroup = new THREE.Group();
-            const frustumGeom = this.createCameraFrustumGeometry(0.14);
+            const frustumGeom = this.createCameraFrustumGeometry(0.12);
 
             poses.forEach((pose, idx) => {
                 const pos = new THREE.Vector3(pose.position[0], pose.position[1], pose.position[2]);
                 points.push(pos);
 
-                // Sample frustums periodically along arc
+                // Add frustum every 2 poses or endpoints
                 if (idx % 2 === 0 || idx === poses.length - 1) {
-                    let color = 0x06b6d4; // Cyan intermediate
+                    let color = 0x3b82f6; // Blue intermediate
                     if (idx === 0) color = 0x22c55e; // Green start
                     else if (idx === poses.length - 1) color = 0xeab308; // Yellow end
 
@@ -285,14 +275,17 @@ class Minab3DViewer {
                 }
             });
 
-            // Trajectory polyline
             const curveGeom = new THREE.BufferGeometry().setFromPoints(points);
             const lineMat = new THREE.LineBasicMaterial({ color: 0xec4899, linewidth: 2.5 });
             const line = new THREE.Line(curveGeom, lineMat);
 
+            if (this.trajectoryObject) this.scene.remove(this.trajectoryObject);
             this.trajectoryObject = new THREE.Group();
             this.trajectoryObject.add(line);
+            this.trajectoryObject.visible = this.showTrajectory;
             this.scene.add(this.trajectoryObject);
+
+            this.frustumsGroup.visible = this.showFrustums;
             this.scene.add(this.frustumsGroup);
 
             this.updateTrajectoryStats(poses.length);
@@ -324,58 +317,69 @@ class Minab3DViewer {
                 }
             });
 
-            if (points.length > 0) {
-                const geometry = new THREE.BufferGeometry().setFromPoints(points);
-                const material = new THREE.LineBasicMaterial({ color: 0xec4899, linewidth: 2 });
-                const line = new THREE.Line(geometry, material);
+            if (points.length === 0) return;
 
-                this.trajectoryObject = new THREE.Group();
-                this.trajectoryObject.add(line);
-                this.scene.add(this.trajectoryObject);
-                this.updateTrajectoryStats(points.length);
-            }
+            const curveGeom = new THREE.BufferGeometry().setFromPoints(points);
+            const lineMat = new THREE.LineBasicMaterial({ color: 0xec4899, linewidth: 2.5 });
+            const line = new THREE.Line(curveGeom, lineMat);
+
+            if (this.trajectoryObject) this.scene.remove(this.trajectoryObject);
+            this.trajectoryObject = new THREE.Group();
+            this.trajectoryObject.add(line);
+            this.trajectoryObject.visible = this.showTrajectory;
+            this.scene.add(this.trajectoryObject);
+
+            this.updateTrajectoryStats(points.length);
         } catch (e) {
-            console.warn("Trajectory loading error:", e);
+            console.warn("Failed to load trajectory TXT:", e);
         }
     }
 
     toggleMesh(visible) {
-        this.showMesh = visible;
-        if (this.meshObject) this.meshObject.visible = visible;
+        this.showMesh = (visible !== undefined) ? visible : !this.showMesh;
+        if (this.meshObject) this.meshObject.visible = this.showMesh;
     }
 
     togglePointCloud(visible) {
-        this.showPointCloud = visible;
-        if (this.pointCloudObject) this.pointCloudObject.visible = visible;
+        this.showPointCloud = (visible !== undefined) ? visible : !this.showPointCloud;
+        if (this.pointCloudObject) this.pointCloudObject.visible = this.showPointCloud;
     }
 
     toggleTrajectory(visible) {
-        this.showTrajectory = visible;
-        if (this.trajectoryObject) this.trajectoryObject.visible = visible;
+        this.showTrajectory = (visible !== undefined) ? visible : !this.showTrajectory;
+        if (this.trajectoryObject) this.trajectoryObject.visible = this.showTrajectory;
     }
 
     toggleFrustums(visible) {
-        this.showFrustums = visible;
-        if (this.frustumsGroup) this.frustumsGroup.visible = visible;
+        this.showFrustums = (visible !== undefined) ? visible : !this.showFrustums;
+        if (this.frustumsGroup) this.frustumsGroup.visible = this.showFrustums;
     }
 
     toggleGrid(visible) {
-        this.showGrid = visible;
-        if (this.gridHelper) this.gridHelper.visible = visible;
-        if (this.axesHelper) this.axesHelper.visible = visible;
+        this.showGrid = (visible !== undefined) ? visible : !this.showGrid;
+        if (this.gridHelper) this.gridHelper.visible = this.showGrid;
+    }
+
+    toggleAxes(visible) {
+        this.showAxes = (visible !== undefined) ? visible : !this.showAxes;
+        if (this.axesHelper) this.axesHelper.visible = this.showAxes;
     }
 
     setWireframe(enabled) {
-        this.wireframeMode = enabled;
+        this.wireframeMode = (enabled !== undefined) ? enabled : !this.wireframeMode;
         if (this.meshObject) {
             if (this.meshObject.material) {
-                this.meshObject.material.wireframe = enabled;
-            } else {
-                this.meshObject.traverse((c) => {
-                    if (c.isMesh && c.material) c.material.wireframe = enabled;
+                this.meshObject.material.wireframe = this.wireframeMode;
+            } else if (this.meshObject.children) {
+                this.meshObject.traverse(child => {
+                    if (child.isMesh && child.material) child.material.wireframe = this.wireframeMode;
                 });
             }
         }
+    }
+
+    toggleWireframe() {
+        this.setWireframe();
     }
 
     setPointSize(size) {
@@ -387,21 +391,21 @@ class Minab3DViewer {
 
     resetView() {
         if (!this.camera || !this.controls) return;
-        this.camera.position.set(0.0, 1.2, 3.2);
+        this.camera.position.set(0.0, 1.2, 2.4);
         this.controls.target.set(0, 0, 0);
         this.controls.update();
     }
 
     topView() {
         if (!this.camera || !this.controls) return;
-        this.camera.position.set(0.0, 3.5, 0.01);
+        this.camera.position.set(0.0, 3.2, 0.001);
         this.controls.target.set(0, 0, 0);
         this.controls.update();
     }
 
     frontView() {
         if (!this.camera || !this.controls) return;
-        this.camera.position.set(0.0, 0.0, 3.2);
+        this.camera.position.set(0.0, 0.2, 2.5);
         this.controls.target.set(0, 0, 0);
         this.controls.update();
     }

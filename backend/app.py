@@ -9,7 +9,6 @@ from backend.routes.pages import pages_bp
 from backend.routes.upload import upload_bp
 from backend.routes.jobs import jobs_bp
 from backend.routes.results import results_bp
-from backend.routes.telemetry import telemetry_bp
 
 logging.basicConfig(
     level=logging.INFO,
@@ -36,7 +35,6 @@ def create_app(start_worker: bool = True) -> Flask:
     app.register_blueprint(upload_bp)
     app.register_blueprint(jobs_bp)
     app.register_blueprint(results_bp)
-    app.register_blueprint(telemetry_bp)
 
     # Start background worker thread if enabled and not reloader child process duplicate
     if start_worker and not os.environ.get("WERKZEUG_RUN_MAIN") == "false":

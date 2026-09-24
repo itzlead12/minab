@@ -45,8 +45,8 @@ def handle_upload():
     # 1. Insert dataset
     conn.execute(
         """
-        INSERT INTO datasets (id, source_type, filename, stored_path, has_telemetry, mission_id, created_at)
-        VALUES (?, 'upload', ?, ?, 0, NULL, ?)
+        INSERT INTO datasets (id, source_type, filename, stored_path, created_at)
+        VALUES (?, 'upload', ?, ?, ?)
         """,
         (dataset_id, filename, stored_path, now_iso)
     )

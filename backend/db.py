@@ -23,18 +23,6 @@ def init_db() -> None:
             source_type  TEXT NOT NULL,
             filename     TEXT NOT NULL,
             stored_path  TEXT NOT NULL,
-            has_telemetry INTEGER DEFAULT 0,
-            mission_id   TEXT,
-            created_at   TEXT NOT NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS missions (
-            id           TEXT PRIMARY KEY,
-            name         TEXT NOT NULL,
-            area_geojson TEXT,
-            altitude_m   REAL,
-            overlap_pct  REAL,
-            speed_mps    REAL,
             created_at   TEXT NOT NULL
         );
 
