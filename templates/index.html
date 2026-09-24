@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ምናብ | Minab - Autonomous Aerial Exploration</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brandGreen: '#16A34A',
+            brandDark: '#05070a',
+            brandCard: '#0d1117',
+            brandBorder: '#1f2937'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #05070a; color: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+  <!-- Nav -->
+  <header class="border-b border-brandBorder/80 px-6 py-4 flex items-center justify-between sticky top-0 bg-brandDark/90 backdrop-blur z-50">
+    <div class="flex items-center gap-3">
+      <img src="/assets/logo.png" alt="Minab Logo" class="w-8 h-8 object-contain">
+      <span class="text-lg font-bold text-white tracking-wide">ምናብ | Minab</span>
+    </div>
+    <div class="flex items-center gap-6 text-sm">
+      <a href="#about" class="text-slate-400 hover:text-white transition-colors">Platform</a>
+      <a href="#layers" class="text-slate-400 hover:text-white transition-colors">Architecture</a>
+      <a href="#loop" class="text-slate-400 hover:text-white transition-colors">Exploration Loop</a>
+      <a href="https://github.com/itzlead12/minab" target="_blank" class="px-3.5 py-1.5 rounded bg-brandGreen text-white text-xs font-semibold hover:bg-emerald-600 transition-colors">GitHub</a>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="max-w-6xl mx-auto px-6 pt-20 pb-16 text-center space-y-6">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brandGreen/40 bg-brandGreen/10 text-xs font-mono text-brandGreen">
+      <span class="w-2 h-2 rounded-full bg-brandGreen animate-pulse"></span>
+      Aerospace & Computer-Vision Research Platform
+    </div>
+    <h1 class="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-tight">
+      See. Reconstruct.<br><span class="text-brandGreen">Understand. Explore.</span>
+    </h1>
+    <p class="max-w-2xl mx-auto text-slate-400 text-base sm:text-lg leading-relaxed">
+      A UAV explores an unmapped environment, Minab turns aerial vision into coherent 3D spatial models, and that model actively guides what should be explored next.
+    </p>
+    <div class="pt-4 flex items-center justify-center gap-4">
+      <a href="#about" class="px-6 py-2.5 rounded bg-brandGreen hover:bg-emerald-600 text-white font-medium text-sm transition-colors">
+        Explore Architecture
+      </a>
+      <a href="https://github.com/itzlead12/minab/tree/3d-module" target="_blank" class="px-6 py-2.5 rounded border border-brandBorder bg-brandCard hover:border-slate-600 text-slate-200 font-medium text-sm transition-colors">
+        3D Vision Engine
+      </a>
+    </div>
+
+    <!-- Visual Graphic -->
+    <div class="pt-12">
+      <div class="rounded-xl border border-brandBorder overflow-hidden bg-brandCard shadow-2xl">
+        <img src="/assets/uav_exploration.png" alt="Autonomous Aerial Exploration" class="w-full h-auto object-cover">
+      </div>
+    </div>
+  </section>
+
+  <!-- The 6 Layers Grid -->
+  <section id="layers" class="max-w-6xl mx-auto px-6 py-20 border-t border-brandBorder/60">
+    <div class="text-center mb-14 space-y-2">
+      <h2 class="text-2xl sm:text-3xl font-bold text-white">The Six System Layers</h2>
+      <p class="text-sm text-slate-400">An engineered modular stack spanning flight missions to spatial decision loops.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="p-6 rounded-lg bg-brandCard border border-brandBorder space-y-3">
+        <span class="text-xs font-mono text-brandGreen font-bold">01. MISSION LAYER</span>
+        <h3 class="text-base font-bold text-white">Coverage & Route Planning</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">Converts survey boundaries, altitudes, camera specs, and overlap thresholds into executable MAVLink / PX4 waypoints.</p>
+      </div>
+
+      <div class="p-6 rounded-lg bg-brandCard border border-brandBorder space-y-3">
+        <span class="text-xs font-mono text-brandGreen font-bold">02. AERIAL DATA LAYER</span>
+        <h3 class="text-base font-bold text-white">Synchronized Telemetry</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">Microsecond time-aligned visual frames paired with GPS coordinates, barometric altitude, velocity vectors, and attitude angles.</p>
+      </div>
+
+      <div class="p-6 rounded-lg bg-brandCard border border-brandBorder space-y-3">
+        <span class="text-xs font-mono text-brandGreen font-bold">03. CONNECTIVITY LAYER</span>
+        <h3 class="text-base font-bold text-white">Edge to Ground Pipeline</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">Hardware partitioning where the UAV senses and transmits, while the ground workstation executes neural ML inference.</p>
+      </div>
+
+      <div class="p-6 rounded-lg bg-brandCard border border-brandBorder space-y-3">
+        <span class="text-xs font-mono text-brandGreen font-bold">04. INTELLIGENCE LAYER</span>
+        <h3 class="text-base font-bold text-white">Vision & Neural Depth</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">ORB epipolar camera motion recovery combined with Depth Anything V2 monocular affine depth inference.</p>
+      </div>
+
+      <div class="p-6 rounded-lg bg-brandCard border border-brandBorder space-y-3">
+        <span class="text-xs font-mono text-brandGreen font-bold">05. SPATIAL LAYER</span>
+        <h3 class="text-base font-bold text-white">Fused 3D Geometry</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">Multi-view voxel point cloud fusion, Screened Poisson surface reconstruction, and radiance texture projection.</p>
+      </div>
+
+      <div class="p-6 rounded-lg bg-brandCard border border-brandBorder space-y-3">
+        <span class="text-xs font-mono text-brandGreen font-bold">06. AUTONOMOUS EXPLORATION</span>
+        <h3 class="text-base font-bold text-white">Next-Best-View Planning</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">Analyzes coverage density and occlusion uncertainty to autonomously command the drone to explore unobserved regions.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-brandBorder/60 py-8 text-center text-xs text-slate-500">
+    <p>ምናብ | Minab Platform &bull; Aerospace & Computer Vision Research</p>
+  </footer>
+</body>
+</html>
