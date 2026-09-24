@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="backend/static/logo.png" alt="Minab Logo" width="130" />
+  <img src="assets/logo.png" alt="Minab Logo" width="130" />
 </p>
 
 <h1 align="center">ምናብ | MINAB</h1>
 
 <p align="center">
-  <strong>Aerospace & Computer-Vision Research Platform for Autonomous Aerial Exploration & 3D Spatial Reconstruction</strong>
+  <strong>Autonomous Aerial Exploration & Vision-Based 3D Spatial Reconstruction Platform</strong>
 </p>
 
 <p align="center">
@@ -19,33 +19,35 @@
   <img src="https://img.shields.io/badge/Python-3.10-FFFFFF?style=flat&labelColor=000000&color=16A34A" alt="Python 3.10" />
   <img src="https://img.shields.io/badge/Engine-OpenCV%20%7C%20Open3D-FFFFFF?style=flat&labelColor=000000&color=16A34A" alt="OpenCV & Open3D" />
   <img src="https://img.shields.io/badge/Depth%20Model-Depth%20Anything%20V2-FFFFFF?style=flat&labelColor=000000&color=16A34A" alt="Depth Anything V2" />
-  <img src="https://img.shields.io/badge/Tests-Pytest%20Passing-16A34A?style=flat&labelColor=000000" alt="Pytest Passing" />
+  <img src="https://img.shields.io/badge/Branch-3d--module-16A34A?style=flat&labelColor=000000" alt="Branch 3d-module" />
 </p>
 
 <p align="center">
-  <img src="backend/static/uav_exploration.png" alt="Minab Autonomous Aerial Exploration & Spatial Reconstruction" width="100%" />
+  <img src="assets/uav_exploration.png" alt="Minab Autonomous Aerial Exploration and Spatial Reconstruction" width="100%" />
 </p>
 
 ---
 
-## 🛰️ Core Identity
+## Core Identity
 
-**ምናብ / Minab** is a research-oriented aerospace and computer-vision platform designed to perceive physical environments from aerial perspectives and reconstruct them into coherent, colorized 3D spatial models.
+**ምናብ / Minab** is an aerospace and computer-vision platform designed to perceive physical environments from aerial imagery and reconstruct them into coherent, colorized 3D spatial models.
 
-The long-term system bridges multiple foundational disciplines:
-* **Computer Vision & Machine Learning** (Feature tracking, epipolar geometry, relative depth inference)
-* **3D Reconstruction & Spatial Computing** (Multi-view point cloud fusion, Screened Poisson meshing)
-* **UAV Systems & Autonomous Exploration** (Telemetry synchronization, coverage planning, Next-Best-View decision loops)
-* **Aerospace & Planetary Science** (Autonomous surveying of unmapped, extreme, or planetary-analogue terrains)
+The system combines:
+* Computer Vision
+* Machine Learning
+* 3D Reconstruction
+* UAV Systems
+* Autonomous Exploration
+* Spatial Computing
 
-### The Central Thesis
-> **A UAV explores an environment, Minab turns what it sees into a 3D spatial model, and that model actively guides what should be explored next.**
+### The Central Idea
+> **A UAV explores an environment, Minab turns what it sees into a spatial model, and that model guides what should be explored next.**
 
-This feedback loop makes Minab far more than a post-processing 3D reconstruction tool: **it is an active, closed-loop aerial exploration system.**
+This feedback loop makes Minab more than a 3D reconstruction tool: **it is an active aerial exploration system.**
 
 ---
 
-## 🔄 The Minab Feedback Loop
+## The Minab Loop
 
 ```text
                   DEFINE EXPLORATION AREA
@@ -90,316 +92,262 @@ This feedback loop makes Minab far more than a post-processing 3D reconstruction
                              ▼
                      NEXT FLIGHT PLAN
                              │
-                             └──────────────────────► (Fly Again)
+                             └──────────────────────►
 ```
 
-The final feedback step—evaluating reconstruction confidence, identifying unobserved occlusions, and generating next-best viewpoints—is the research core of the platform.
+That final feedback loop—evaluating coverage, identifying occluded areas, and planning the next-best flight route—is what makes Minab an autonomous exploration platform.
 
 ---
 
-## 🔬 What Minab Does Today (Current POC)
+## What Minab Does Today (Current POC)
 
-The current working repository contains the **vision and 3D reconstruction core**. It takes continuous video walkarounds and reconstructs dense geometry and camera paths:
+The current working proof-of-concept is the vision and 3D reconstruction core located on the **`3d-module`** branch.
+
+The pipeline takes video footage and produces:
 
 ```text
 Camera Video
      ↓
-Frame Extraction (OpenCV)
+Frame Extraction
      ↓
-Camera Calibration (Pinhole Intrinsics)
+Camera Calibration
      ↓
-Feature Detection & Matching (ORB + Lowe's Ratio Test)
+Feature Detection
      ↓
-Camera Pose Estimation (Essential Matrix + cv2.recoverPose())
+Feature Matching
      ↓
-Monocular Relative Depth Estimation (Depth Anything V2)
+Camera Pose Estimation
      ↓
-3D Point Cloud Backprojection
+Monocular Depth Estimation
      ↓
-Multi-View Cloud Fusion (Voxel Grid + Statistical Outlier Removal)
+Point Cloud Generation
      ↓
-Surface Reconstruction (Open3D Screened Poisson / BPA)
+Multi-frame Fusion
      ↓
-Interactive 3D WebGL Studio & Export (.OBJ, .PLY, Trajectory JSON)
+Surface Reconstruction
+     ↓
+3D Mesh
 ```
 
-### ⚠️ Monocular Geometry & Scale Ambiguity Notice
-* **Normalized Translation:** Monocular epipolar motion recovery (`cv2.recoverPose()`) resolves translation up to an arbitrary scale factor ($\|\mathbf{t}\| = 1.0$). A single camera cannot determine absolute metric distance without external metric sensors (IMU baseline, stereo baseline, or ground control points).
-* **Relative Depth Prior:** Neural monocular depth models (**Depth Anything V2**) predict **relative affine depth maps** (ordinal depth relationships).
-* **Coordinates:** All outputs ($X, Y, Z$), point clouds, camera trajectories, and meshes are represented in **arbitrary relative units, not physical meters**.
+The implementation uses:
+* **OpenCV / ORB** for feature detection and Lowe's ratio matching
+* **recoverPose()** for relative camera motion and trajectory estimation
+* **Depth Anything V2** for dense monocular relative depth estimation
+* **Open3D** for multi-view point cloud fusion, statistical outlier filtering, and Poisson surface meshing
+
+### Monocular Scale Notice
+Monocular reconstruction has an inherent scale ambiguity: the baseline translation vector between views is normalized ($\|\mathbf{t}\| = 1.0$), and Depth Anything V2 estimates relative affine depth. All coordinates ($X, Y, Z$), point clouds, camera trajectories, and meshes are generated in arbitrary relative units unless external metric sensors or ground control points establish metric scale.
 
 ---
 
-## 🏛️ The Six System Layers
+## The Six System Layers
 
-Minab is architected across six modular layers:
+The complete Minab system is organized across six major layers:
 
 ```mermaid
 graph TD
-    L1[01. Mission Layer\nCoverage Planner • Waypoints • Flight Objectives] --> L2[02. Aerial Data Layer\nVideo Frames • GPS • IMU • Telemetry Sync]
-    L2 --> L3[03. Connectivity Layer\nUAV Senses & Transmits • Ground PC Computes]
-    L3 --> L4[04. Intelligence Layer\nORB Tracking • Depth Anything V2 • PyTorch]
-    L4 --> L5[05. Spatial Layer\nMulti-View Fusion • Poisson Mesh • Texture Projection]
-    L5 --> L6[06. Autonomous Exploration\nCoverage Analysis • Uncertainty Estimation • Next-Best-View]
+    L1[01. Mission Layer<br>Coverage Planner • Waypoints • Route Objectives] --> L2[02. Aerial Data Layer<br>Video Frames • GPS • IMU • Telemetry Sync]
+    L2 --> L3[03. Connectivity Layer<br>UAV Senses & Transmits • Ground PC Computes]
+    L3 --> L4[04. Intelligence Layer<br>ORB Tracking • Depth Anything V2 • PyTorch]
+    L4 --> L5[05. Spatial Layer<br>Multi-View Fusion • Poisson Mesh • Texture Projection]
+    L5 --> L6[06. Autonomous Exploration<br>Coverage Analysis • Uncertainty Estimation • Next-Best-View]
     L6 -.->|Closed-Loop Replanning| L1
 ```
 
 ### 01. Mission Layer
-* Defines the survey perimeter, target altitude, flight velocity, camera configuration, forward/lateral overlap percentages, and survey objectives.
-* Converts spatial boundaries into systematic coverage grids and PX4/MAVLink waypoint sequences.
+The user defines:
+* Exploration area
+* Altitude
+* Flight speed
+* Camera configuration
+* Desired overlap
+* Route type
+* Exploration objective
+
+Minab converts this into an actionable flight mission:
+```text
+Exploration Area → Coverage Planner → Waypoints → Mission → UAV
+```
 
 ### 02. Aerial Data Layer
-* Synchronizes two essential telemetry streams:
-  * **Visual Stream:** High-resolution frames, video feeds, microsecond timestamps.
-  * **Flight Stream:** GPS coordinates, barometric altitude, velocity vectors, roll/pitch/yaw attitude, battery reserves, and autopilot state.
+The UAV collects:
+* **Visual data:** Video, individual frames, timestamps
+* **Flight data:** GPS, altitude, velocity, heading, attitude, battery, flight mode, mission state
+
+Video and telemetry streams are timestamped and synchronized.
 
 ### 03. Connectivity Layer
-* Keeps computation cleanly partitioned according to hardware constraints:
-  ```text
-                      UAV
-                       │
-          ┌────────────┴────────────┐
-          │                         │
-       Camera                 Flight Controller
-          │                         │
-          ▼                       MAVLink
-   Companion Computer               │
-          │                         │
-          ├──── Video ──────────────┤
-          │                         │
-          └──── Telemetry ──────────┘
-                       │
-                       ▼
-                  Ground PC (High-Performance GPU)
-                       │
-                       ▼
-                     Minab
-  ```
-* The UAV flies, senses, and streams data; the ground station executes heavy neural depth inference, multi-view point cloud fusion, and surface meshing.
+The communication architecture maintains a clean separation of responsibilities:
+```text
+                    UAV
+                     │
+        ┌────────────┴────────────┐
+        │                         │
+     Camera                 Flight Controller
+        │                         │
+        ▼                       MAVLink
+ Companion Computer               │
+        │                         │
+        ├──── Video ──────────────┤
+        │                         │
+        └──── Telemetry ──────────┘
+                     │
+                     ▼
+                 Ground PC
+                     │
+                     ▼
+                   Minab
+```
+The UAV primarily senses, flies, and transmits. The ground computer performs the computationally intensive machine learning and computer vision processing.
 
 ### 04. Intelligence Layer
-* The Python ML/CV engine utilizing OpenCV, NumPy, SciPy, PyTorch, Depth Anything V2, and Open3D.
-* Recovers camera trajectory from epipolar geometry, generates per-frame dense depth maps, and tracks spatial features across temporal sequences.
+The Python ML/CV core:
+```text
+Python
+├── OpenCV
+├── NumPy
+├── SciPy
+├── PyTorch
+├── Depth Anything V2
+├── Open3D
+└── Computer Vision Models
+```
+
+Pipeline flow:
+```text
+ORB → BFMatcher → Essential Matrix → recoverPose() → Camera Trajectory → Depth Anything V2 → RGB-D Reconstruction → Open3D → Point Cloud → Mesh
+```
 
 ### 05. Spatial Layer
-* Transforms raw sensor feeds into an integrated spatial environment.
-* Conceptually decouples **geometry** from **appearance**:
-  1. Establishes coherent, outlier-free spatial geometry via multi-view voxel fusion.
-  2. Generates watertight triangle meshes via Screened Poisson reconstruction.
-  3. Projects multi-view RGB radiance onto the geometry for realistic appearance.
+Minab transforms raw observations into a spatial environment. The goal is not simply a point cloud, but a reconstructed spatial model:
+```text
+RGB Frames + Camera Poses + Depth → RGB-D Frames → Multi-view Fusion → Colored Point Cloud → Surface Reconstruction → Mesh → Texture / Color Projection → 3D Environment
+```
+
+Geometry and appearance remain conceptually decoupled:
+1. Establish coherent spatial geometry.
+2. Reconstruct and project visual appearance onto that geometry.
 
 ### 06. Autonomous Exploration
-* The active research layer that analyzes the reconstructed 3D model:
-  * Calculates spatial coverage density and visual ray intersection angles.
-  * Identifies occluded surfaces, low-confidence depth regions, and missing geometry.
-  * Computes **Next-Best-View (NBV)** camera poses and issues follow-up flight missions.
-  * **Loop:** *Explore &rarr; Reconstruct &rarr; Understand &rarr; Decide &rarr; Explore Again.*
+The closed-loop research component:
+1. After reconstructing the environment, Minab evaluates:
+   * What areas were observed
+   * What areas were poorly observed
+   * Where reconstruction confidence is low
+   * Where geometry is incomplete
+   * Where additional viewpoints are required
+   * What route could improve the model
+2. Decision cycle:
+   ```text
+   3D Model → Coverage Analysis → Uncertainty Estimation → Candidate Viewpoints → Next-Best-View Planning → New Mission → UAV
+   ```
+3. Cycle repeats: **Explore → Reconstruct → Understand → Decide → Explore Again.**
 
 ---
 
-## 🖥️ Backend Architecture
+## Backend Architecture
 
-Flask orchestrates API routes and user sessions while delegating computational work to background worker processes:
+Flask acts as the orchestration and API service, delegating heavy inference to worker processes:
 
 ```text
-                    Flask App Factory
-                            │
-             ┌──────────────┼──────────────┐
-             │              │              │
-          Missions       Uploads        Results
-             │              │              │
-             └──────────────┼──────────────┘
-                            │
-                            ▼
-                   Background Worker Queue
-                            │
-                    Python / PyTorch
-                            │
-             ┌──────────────┼──────────────┐
-             ▼              ▼              ▼
-         Tracking         Depth         Meshing
-          (ORB)       (DepthAnything)  (Open3D)
+                    Flask
+                      │
+       ┌──────────────┼──────────────┐
+       │              │              │
+    Missions       Uploads        Results
+       │              │              │
+       └──────────────┼──────────────┘
+                      │
+                      ▼
+                 ML Workers
+                      │
+             Python / PyTorch
+                      │
+       ┌──────────────┼──────────────┐
+       ▼              ▼              ▼
+      Pose          Depth      Reconstruction
+```
+
+The web interface serves as the mission, monitoring, and 3D visualization layer, while Python background workers execute the computational pipeline.
+
+---
+
+## Development Roadmap
+
+```text
+Phase 1 — Vision POC (Complete on branch 3d-module)
+  Video → Pose → Depth → Point Cloud → Mesh
+
+Phase 2 — Real Camera Validation
+  Lens calibration, real-world motion, feature stability, color consistency
+
+Phase 3 — UAV Integration
+  UAV → Camera → Video → Ground PC → Minab → 3D Model
+
+Phase 4 — Mission Planning
+  User → Area → Altitude → Speed → Overlap → Route Planner → PX4 Mission → UAV
+
+Phase 5 — Spatial Intelligence
+  3D Model → Coverage → Uncertainty → Missing Regions
+
+Phase 6 — Active Exploration
+  Plan → Fly → Observe → Reconstruct → Analyze → Replan → Fly Again
 ```
 
 ---
 
-## 🎨 Visual Identity & UI Language
+## Visual Identity & Design Standards
 
-Minab strictly follows an engineered, scientific aesthetic designed for clarity and focus:
+The visual design system is locked to three primary values:
 
-### Three-Color System
-
-| Color | Hex | Role |
+| Token | Hex | Application |
 | :--- | :--- | :--- |
-| **Black** | `#000000` | Primary backdrop, deep negative space, canvas background. |
-| **White** | `#FFFFFF` | Primary typography, structural borders, axes, high-contrast marks. |
-| **Minab Green** | `#16A34A` | Single identity accent, active states, trajectory points, laser scans. |
+| **Black** | `#000000` | Primary canvas and viewports |
+| **White** | `#FFFFFF` | Primary typography, borders, and structural marks |
+| **Minab Green** | `#16A34A` | Identity accent, active states, scans, and trajectories |
 
-* **Zero clutter:** No purples, no generic blues, no decorative neon gradients, and no cyberpunk glows.
-* **Typography:** Clean, geometric sans-serif (Google Sans / Inter).
-* **Interface Feel:** Aerospace flight control software meets modern scientific visualization.
+No secondary blues, purples, cyans, decorative gradients, neon glow, or excessive shadows.
 
-### The Identity Mark
-The Minab emblem is a pure, minimalist symbol representing:
-* **The Mountain / Terrain:** Physical environment and topography ($M$).
-* **Contour Lines:** Spatial depth and elevation modeling.
-* **Flight Arc & Node:** UAV orbital trajectory and autonomous aerial surveying.
-* **Viewfinder Brackets:** Computer vision, frame capture, and spatial intelligence.
+### Identity Symbol
+The symbol-only mark encapsulates:
+* **Mountain / M:** Physical environment and terrain
+* **Contour Lines:** Spatial reconstruction and elevation
+* **Flight Arc:** Aerial exploration
+* **Node:** Autonomous UAV system
+* **Viewfinder Brackets:** Computer vision and framing
+* **Green:** Identity signal
 
----
-
-## 🚀 Development Roadmap
-
-```text
-Phase 1: Vision POC (Completed)
-  └─ Monocular video -> ORB tracking -> Depth Anything V2 -> Poisson mesh -> WebGL viewer.
-
-Phase 2: Real Camera & Optical Validation (Current)
-  └─ Real phone & drone walkarounds, lens calibration profiles, color balance consistency.
-
-Phase 3: UAV Ground-Link Integration
-  └─ Synchronous ingestion of video feeds + MAVLink telemetry logs into Minab dataset storage.
-
-Phase 4: Autonomous Mission Planning
-  └─ User selects bounding polygon; Minab auto-generates PX4 survey waypoints with overlap control.
-
-Phase 5: Spatial Intelligence & Uncertainty
-  └─ Voxel grid occupancy mapping, coverage ray-casting, reconstruction confidence heatmaps.
-
-Phase 6: Closed-Loop Active Exploration
-  └─ Autonomous Next-Best-View planning: drone automatically updates flight path to inspect unmapped areas.
-```
+### Interface Language
+* Typography: Google Sans / Inter
+* Thin, restrained borders
+* Compact, structured cards
+* Monochrome icons with green active indicators
+* Aesthetic: Aerospace mission software meets scientific visualization
 
 ---
 
-## 🌌 Aerospace & Astronomy Direction
+## Accessing the Working Code
 
-Minab investigates a fundamental question in autonomous robotics:
-> **How can autonomous aerial systems visually perceive and reconstruct spatial environments that they have never previously encountered?**
+The complete working 3D reconstruction codebase, Flask web application, Three.js studio viewer, and automated test suite are hosted on the **`3d-module`** branch.
 
-While Earth's landscapes provide the immediate development ground, the platform's architectural principles directly apply to:
-* **Complex, GPS-Denied Terrain:** Autonomous inspection of canyons, collapsed structures, and subterranean caverns.
-* **Planetary-Analogue Exploration:** Terrestrial testbeds simulating Martian crater surveys and lunar surface exploration.
-* **Autonomous Aerial Science:** Long-range aerial drones mapping geological formations without human intervention.
-
----
-
-## 📁 Repository Structure
-
-```text
-minab/
-├── backend/
-│   ├── routes/
-│   │   ├── jobs.py                 # Job queue polling & retry endpoints
-│   │   ├── pages.py                # Web studio views (/ and /jobs/<id>)
-│   │   ├── results.py              # 3D artifact downloads (.obj, .ply, .json)
-│   │   └── upload.py               # Video ingestion & validation
-│   ├── services/
-│   │   └── storage.py              # File path management & dataset persistence
-│   ├── static/
-│   │   ├── css/minab.css           # Black/White/Green design system
-│   │   ├── js/viewer.js            # Three.js 3D WebGL viewer & orbit controller
-│   │   ├── logo.png                # Official Minab identity mark
-│   │   └── uav_exploration.png     # Autonomous exploration concept visual
-│   ├── templates/
-│   │   ├── base.html               # Minimalist shell layout
-│   │   ├── index.html              # Video Upload & 3D Reconstruction Studio
-│   │   └── job.html                # Real-time Stage Tracker & 3D WebGL Viewport
-│   ├── worker/
-│   │   ├── runner.py               # Background job daemon thread
-│   │   └── vision_adapter.py       # Headless pipeline subprocess runner
-│   ├── app.py                      # Flask application factory
-│   └── db.py                       # SQLite schema (datasets, jobs, results)
-│
-├── configs/
-│   ├── camera_default.yaml         # Calibrated pinhole phone model (720p)
-│   ├── camera_synthetic.yaml       # Synthetic reference camera model
-│   └── pipeline_config.yaml        # Tracking, fusion, and meshing parameters
-│
-├── src/
-│   ├── calibration/
-│   │   ├── calibrate_camera.py     # Checkerboard camera calibration
-│   │   └── input_validator.py      # Laplacian focus & parallax motion assessor
-│   ├── depth/
-│   │   └── depth_estimator.py      # Depth Anything V2 PyTorch inference
-│   ├── reconstruction/
-│   │   ├── backprojector.py        # Pinhole 2D depth -> 3D point cloud backprojection
-│   │   ├── cloud_fusion.py         # Multi-view point cloud fusion & voxel filtering
-│   │   └── mesh_builder.py         # Open3D Screened Poisson / BPA surface mesher
-│   ├── tracking/
-│   │   ├── feature_tracker.py      # ORB feature detection & Lowe's ratio matcher
-│   │   └── pose_estimator.py       # Essential matrix RANSAC pose recovery
-│   ├── visualization/
-│   │   └── visualizer_3d.py        # Local desktop Open3D visualizer
-│   └── pipeline.py                 # Master vision pipeline orchestrator
-│
-├── tests/
-│   ├── test_backprojector.py       # Pinhole backprojection math tests
-│   ├── test_input_validator.py     # Video sharpness & parallax scoring tests
-│   ├── test_reconstruction.py      # Point cloud fusion & Poisson meshing tests
-│   └── test_tracking.py            # ORB tracking & unit translation tests
-│
-├── tools/
-│   └── generate_test_sequence.py   # Synthetic video test sequence generator
-│
-├── instruction.md                  # Video capture guidelines & AI generation prompt
-├── progress.md                     # Comprehensive technical documentation
-├── requirements.txt                # Python package dependencies
-├── run.py                          # Web application launcher
-└── README.md                       # Master platform documentation
-```
-
----
-
-## ⚡ Quick Start
-
-### 1. Environment Setup
-
-Verified on **Python 3.10** on Windows, Linux, and macOS:
+### Switch to the Working Code
 
 ```powershell
-# Clone the repository
-git clone https://github.com/itzlead12/minab.git
-cd minab
+git checkout 3d-module
+```
 
-# Create and activate virtual environment
+### Quick Run
+
+```powershell
+# Setup virtual environment
 py -3.10 -m venv .venv
-.venv\Scripts\Activate.ps1    # On Linux/macOS: source .venv/bin/activate
+.venv\Scripts\Activate.ps1
 
-# Install dependencies
-pip install --upgrade pip
+# Install requirements
 pip install -r requirements.txt
-```
 
-### 2. Launch the Web Studio
-
-```powershell
+# Start the Web Studio
 python run.py
 ```
-Open **`http://localhost:5000`** in your browser:
-1. Upload a short orbital video (`.mp4`, `.mov`, `.avi`).
-2. Watch real-time stage progress: **Frames &rarr; Pose &rarr; Depth &rarr; Fusion &rarr; Mesh**.
-3. Inspect and interact with the 3D model in the WebGL viewer.
-4. Download the reconstructed `.obj`, `.ply`, and camera trajectory files with one click.
 
-### 3. Run Pipeline via Command Line
-
-```powershell
-python src/pipeline.py --video data/input_videos/sample.mp4 --camera configs/camera_default.yaml --output-dir data/output --frame-stride 2 --max-frames 40 --headless
-```
-
-### 4. Execute Automated Test Suite
-
-```powershell
-pytest tests/ -v
-```
-
----
-
-## 📜 Research Statement & License
-
-**Minab (ምናብ)** is developed for computer vision, robotics, and aerospace research.
-
-> *"Build a smarter way to see, map, understand, and explore the world from above and beyond."*
-
-Licensed under the **MIT License**.
+Open **`http://localhost:5000`** to access the 3D Reconstruction Studio.
