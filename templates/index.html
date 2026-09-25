@@ -16,11 +16,13 @@
     theme: {
       extend: {
         colors: {
-          brandDark: '#05070a',
-          brandCard: '#0d1117',
-          brandBorder: '#1f2937',
+          brandDark: '#ffffff',
+          brandCard: '#ffffff',
+          brandSurface: '#f8fafc',
+          brandBorder: '#e2e8f0',
           brandGreen: '#16A34A',
           brandGreenDark: '#15803d',
+          brandGreenLight: '#f0fdf4',
         },
         fontFamily: {
           sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
@@ -34,8 +36,8 @@
 
 <style>
   body {
-    background-color: #05070a;
-    color: #f3f4f6;
+    background-color: #ffffff;
+    color: #0f172a;
     font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
   }
@@ -44,20 +46,20 @@
     font-family: "JetBrains Mono", monospace !important;
   }
   
-  /* Minimal background grid */
+  /* Minimal background grid for light theme */
   .bg-grid {
     background-size: 40px 40px;
     background-image: 
-      linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
     mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
     -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
   }
 
-  /* Custom Scrollbar */
+  /* Custom Light Scrollbar */
   ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: #05070a; }
-  ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 3px; }
+  ::-webkit-scrollbar-track { background: #f8fafc; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: #16A34A; }
   
   model-viewer {
@@ -66,39 +68,39 @@
   }
 </style>
 </head>
-<body class="bg-brandDark text-slate-100 antialiased selection:bg-brandGreen selection:text-white">
+<body class="bg-white text-slate-900 antialiased selection:bg-brandGreen selection:text-white">
 
 <!-- TOP NAVIGATION -->
-<nav class="fixed top-0 inset-x-0 z-50 border-b border-brandBorder bg-brandDark/90 backdrop-blur-md">
+<nav class="fixed top-0 inset-x-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-md">
   <div class="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
     <a href="#" class="flex items-center gap-3">
-      <div class="w-8 h-8 rounded bg-brandCard border border-brandBorder flex items-center justify-center p-1.5">
+      <div class="w-8 h-8 rounded bg-slate-50 border border-slate-200 flex items-center justify-center p-1.5 shadow-sm">
         <img src="/static/logo.png" alt="Minab Logo" class="h-full w-full object-contain">
       </div>
       <div>
-        <span class="font-bold tracking-tight text-sm sm:text-base text-white flex items-center gap-1.5">
-          ምናብ <span class="text-slate-500 font-normal">|</span> Minab
+        <span class="font-bold tracking-tight text-sm sm:text-base text-slate-900 flex items-center gap-1.5">
+          ምናብ <span class="text-slate-400 font-normal">|</span> Minab
         </span>
-        <span class="text-[10px] font-mono text-slate-400 block -mt-0.5 tracking-wider uppercase">Spatial Intelligence</span>
+        <span class="text-[10px] font-mono text-slate-500 block -mt-0.5 tracking-wider uppercase">Spatial Intelligence</span>
       </div>
     </a>
     
-    <div class="hidden md:flex items-center gap-8 text-xs font-medium tracking-wider uppercase text-slate-400">
-      <a href="#pipeline" class="hover:text-white transition-colors">Pipeline</a>
-      <a href="#platform" class="hover:text-white transition-colors">Platform</a>
-      <a href="#example-run" class="hover:text-white transition-colors">Example Output</a>
-      <a href="https://github.com/itzlead12/minab" target="_blank" class="hover:text-white transition-colors flex items-center gap-1">
-        Docs <span class="text-[10px] text-slate-500">↗</span>
+    <div class="hidden md:flex items-center gap-8 text-xs font-semibold tracking-wider uppercase text-slate-600">
+      <a href="#pipeline" class="hover:text-slate-900 transition-colors">Pipeline</a>
+      <a href="#platform" class="hover:text-slate-900 transition-colors">Platform</a>
+      <a href="#example-run" class="hover:text-slate-900 transition-colors">Example Output</a>
+      <a href="https://github.com/itzlead12/minab" target="_blank" class="hover:text-slate-900 transition-colors flex items-center gap-1">
+        Docs <span class="text-[10px] text-slate-400">↗</span>
       </a>
     </div>
     
     <div class="flex items-center gap-3">
-      <a href="https://github.com/itzlead12/minab" target="_blank" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded border border-brandBorder bg-brandCard text-xs text-slate-300 hover:text-white hover:border-slate-600 transition-colors">
+      <a href="https://github.com/itzlead12/minab" target="_blank" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded border border-slate-200 bg-slate-50 text-xs text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors shadow-sm">
         <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
         <span>GitHub</span>
       </a>
 
-      <button id="openAccessModalBtn" class="px-3.5 py-1.5 rounded text-xs font-semibold bg-brandGreen hover:bg-brandGreenDark text-white transition-colors">
+      <button id="openAccessModalBtn" class="px-3.5 py-1.5 rounded text-xs font-semibold bg-brandGreen hover:bg-brandGreenDark text-white transition-colors shadow-sm">
         Request Access
       </button>
     </div>
@@ -106,82 +108,82 @@
 </nav>
 
 <!-- HERO SECTION -->
-<section class="relative min-h-[820px] flex items-center justify-center pt-28 pb-20 overflow-hidden">
+<section class="relative min-h-[820px] flex items-center justify-center pt-28 pb-20 overflow-hidden bg-white">
   <div class="absolute inset-0 bg-grid z-0"></div>
 
   <div class="relative z-10 flex flex-col items-center px-4 sm:px-6 w-full max-w-6xl text-center">
     
     <!-- Clean small-caps label -->
-    <span class="text-xs uppercase tracking-widest text-slate-400 font-mono mb-4">
+    <span class="text-xs uppercase tracking-widest text-slate-500 font-mono mb-4">
       Autonomous Aerial Exploration Platform
     </span>
 
     <!-- Solid headline, no gradient text effect -->
-    <h1 class="font-extrabold text-3xl sm:text-5xl lg:text-6xl tracking-tight text-white max-w-4xl leading-[1.15] mb-5">
+    <h1 class="font-extrabold text-3xl sm:text-5xl lg:text-6xl tracking-tight text-slate-900 max-w-4xl leading-[1.15] mb-5">
       Turn aerial video into 3D models that guide the next <span class="text-brandGreen">exploration</span> flight.
     </h1>
 
-    <p class="text-slate-400 text-sm sm:text-base md:text-lg max-w-2xl font-normal leading-relaxed mb-8">
+    <p class="text-slate-600 text-sm sm:text-base md:text-lg max-w-2xl font-normal leading-relaxed mb-8">
       Minab closes the loop between computer vision and autonomous robotics. Raw flight video is reconstructed into watertight volumetric meshes, generating trajectories for subsequent coverage.
     </p>
 
     <!-- CTAs with plain verbs -->
     <div class="flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto mb-10">
-      <button onclick="document.getElementById('openAccessModalBtn').click()" class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-brandGreen hover:bg-brandGreenDark text-white font-medium text-sm transition-colors">
+      <button onclick="document.getElementById('openAccessModalBtn').click()" class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-brandGreen hover:bg-brandGreenDark text-white font-medium text-sm transition-colors shadow-sm">
         Request Access
       </button>
 
-      <a href="#pipeline" class="w-full sm:w-auto px-6 py-2.5 rounded-lg border border-brandBorder bg-brandCard hover:border-slate-600 text-slate-300 hover:text-white font-medium text-sm transition-colors">
+      <a href="#pipeline" class="w-full sm:w-auto px-6 py-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 font-medium text-sm transition-colors shadow-sm">
         See the Platform
       </a>
     </div>
 
-    <!-- 3D Drone Model Viewport (Clean, focused, no fake telemetry overlays) -->
-    <div class="w-full max-w-4xl rounded-2xl border border-brandBorder bg-brandCard relative overflow-hidden flex flex-col shadow-2xl">
+    <!-- 3D Drone Model Viewport (Light theme frame, model 12.glb) -->
+    <div class="w-full max-w-4xl rounded-2xl border border-slate-200 bg-white relative overflow-hidden flex flex-col shadow-xl">
       
-      <div class="w-full h-[400px] sm:h-[480px] md:h-[520px] relative bg-brandDark/50 flex items-center justify-center">
+      <div class="w-full h-[400px] sm:h-[480px] md:h-[520px] relative bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center">
         <model-viewer
           id="droneViewer"
-          src="/static/home.glb"
+          src="/static/12.glb"
           alt="Minab Exploration UAV 3D Model"
           camera-controls
           auto-rotate
           rotation-per-second="10deg"
-          shadow-intensity="1.2"
+          shadow-intensity="1.4"
           exposure="1.0"
           environment-image="neutral"
           class="w-full h-full cursor-grab active:cursor-grabbing">
         </model-viewer>
 
         <!-- Camera Controls -->
-        <div class="absolute bottom-4 right-4 z-20 flex items-center gap-1.5 p-1 rounded-lg border border-brandBorder bg-brandDark/90 backdrop-blur-sm text-xs font-mono">
-          <button id="btnOrbit" class="px-2.5 py-1 rounded bg-brandCard text-slate-300 hover:text-white transition-colors" title="Perspective Angle">
+        <div class="absolute bottom-4 right-4 z-20 flex items-center gap-1.5 p-1 rounded-lg border border-slate-200 bg-white/95 backdrop-blur-sm text-xs font-mono shadow-sm">
+          <button id="btnOrbit" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:text-slate-900 hover:bg-slate-200 transition-colors" title="Perspective Angle">
             Orbit
           </button>
-          <button id="btnTop" class="px-2.5 py-1 rounded bg-brandCard text-slate-300 hover:text-white transition-colors" title="Plan View">
+          <button id="btnTop" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:text-slate-900 hover:bg-slate-200 transition-colors" title="Plan View">
             Top
           </button>
-          <button id="btnFront" class="px-2.5 py-1 rounded bg-brandCard text-slate-300 hover:text-white transition-colors" title="Elevation View">
+          <button id="btnFront" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:text-slate-900 hover:bg-slate-200 transition-colors" title="Elevation View">
             Front
           </button>
-          <button id="btnToggleRotate" class="px-2.5 py-1 rounded bg-brandCard text-brandGreen hover:text-white transition-colors">
+          <button id="btnToggleRotate" class="px-2.5 py-1 rounded bg-slate-100 text-brandGreenDark hover:bg-slate-200 transition-colors font-medium">
             Rotate: ON
           </button>
         </div>
       </div>
 
       <!-- Airframe Spec Caption Strip -->
-      <div class="border-t border-brandBorder bg-brandDark px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-slate-400">
+      <div class="border-t border-slate-200 bg-slate-50 px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-slate-600">
         <div class="flex items-center gap-2">
-          <span class="text-slate-200 font-semibold">AIRFRAME:</span>
+          <span class="text-slate-900 font-semibold">AIRFRAME:</span>
           <span>Autonomous Survey Quad-rotor</span>
         </div>
         <div class="flex items-center gap-2">
-          <span class="text-slate-200 font-semibold">OPTICAL PAYLOAD:</span>
+          <span class="text-slate-900 font-semibold">OPTICAL PAYLOAD:</span>
           <span>4K Monocular Gimbal</span>
         </div>
         <div class="flex items-center gap-2">
-          <span class="text-slate-200 font-semibold">POSE RECOVERY:</span>
+          <span class="text-slate-900 font-semibold">POSE RECOVERY:</span>
           <span>ORB + RANSAC Essential Matrix</span>
         </div>
       </div>
@@ -192,95 +194,95 @@
 </section>
 
 <!-- RESEARCH TECH STACK STRIP -->
-<section class="border-y border-brandBorder bg-brandDark/60 py-5 px-6">
-  <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-6 md:gap-12 text-xs font-mono text-slate-400">
-    <div class="text-slate-200 font-medium">Python 3.10</div>
-    <div class="text-slate-600 hidden sm:block">•</div>
-    <div class="text-slate-200 font-medium">PyTorch & Torchvision</div>
-    <div class="text-slate-600 hidden sm:block">•</div>
-    <div class="text-slate-200 font-medium">Depth Anything V2</div>
-    <div class="text-slate-600 hidden sm:block">•</div>
-    <div class="text-slate-200 font-medium">OpenCV ORB / RANSAC</div>
-    <div class="text-slate-600 hidden sm:block">•</div>
-    <div class="text-slate-200 font-medium">Open3D Poisson Meshing</div>
-    <div class="text-slate-600 hidden sm:block">•</div>
-    <div class="text-slate-200 font-medium">Three.js WebGL</div>
-    <div class="text-slate-600 hidden sm:block">•</div>
-    <div class="text-slate-200 font-medium">MAVLink Telemetry</div>
+<section class="border-y border-slate-200 bg-slate-50 py-5 px-6">
+  <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-6 md:gap-12 text-xs font-mono text-slate-600">
+    <div class="text-slate-900 font-medium">Python 3.10</div>
+    <div class="text-slate-300 hidden sm:block">•</div>
+    <div class="text-slate-900 font-medium">PyTorch & Torchvision</div>
+    <div class="text-slate-300 hidden sm:block">•</div>
+    <div class="text-slate-900 font-medium">Depth Anything V2</div>
+    <div class="text-slate-300 hidden sm:block">•</div>
+    <div class="text-slate-900 font-medium">OpenCV ORB / RANSAC</div>
+    <div class="text-slate-300 hidden sm:block">•</div>
+    <div class="text-slate-900 font-medium">Open3D Poisson Meshing</div>
+    <div class="text-slate-300 hidden sm:block">•</div>
+    <div class="text-slate-900 font-medium">Three.js WebGL</div>
+    <div class="text-slate-300 hidden sm:block">•</div>
+    <div class="text-slate-900 font-medium">MAVLink Telemetry</div>
   </div>
 </section>
 
 <!-- THE PIPELINE (NARRATIVE STRUCTURE) -->
-<section id="pipeline" class="py-24 px-6 border-b border-brandBorder">
+<section id="pipeline" class="py-24 px-6 border-b border-slate-200 bg-white">
   <div class="max-w-7xl mx-auto">
     
     <div class="max-w-3xl mb-14 space-y-2">
-      <span class="text-xs uppercase tracking-widest text-slate-400 font-mono block">
+      <span class="text-xs uppercase tracking-widest text-slate-500 font-mono block">
         System Architecture
       </span>
-      <h2 class="font-extrabold text-3xl sm:text-4xl text-white tracking-tight">
+      <h2 class="font-extrabold text-3xl sm:text-4xl text-slate-900 tracking-tight">
         The Closed-Loop Exploration Cycle
       </h2>
-      <p class="text-slate-400 text-sm sm:text-base leading-relaxed">
+      <p class="text-slate-600 text-sm sm:text-base leading-relaxed">
         Minab connects computer vision directly to flight planning. The reconstructed spatial model does not merely store geometry; it evaluates reconstruction completeness and determines where the UAV must travel next.
       </p>
     </div>
 
-    <!-- 4-Stage Flow Cards (Clean numbering, no ghost numerals, selective hover) -->
+    <!-- 4-Stage Flow Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       
       <!-- Stage 01 -->
-      <div class="p-6 rounded-xl border border-brandBorder bg-brandCard space-y-3">
-        <div class="text-xs font-mono font-bold text-brandGreen tracking-wider">
+      <div class="p-6 rounded-xl border border-slate-200 bg-white shadow-sm hover:border-slate-300 transition-colors space-y-3">
+        <div class="text-xs font-mono font-bold text-brandGreenDark tracking-wider">
           01 / PERCEPTION
         </div>
-        <h3 class="font-bold text-lg text-white">Visual Acquisition</h3>
-        <p class="text-slate-400 text-xs leading-relaxed">
+        <h3 class="font-bold text-lg text-slate-900">Visual Acquisition</h3>
+        <p class="text-slate-600 text-xs leading-relaxed">
           The UAV conducts an orbital flight path around the region of interest, recording continuous video to capture parallax across overlapping visual keyframes.
         </p>
-        <div class="pt-3 border-t border-brandBorder/60 text-[11px] font-mono text-slate-400">
+        <div class="pt-3 border-t border-slate-100 text-[11px] font-mono text-slate-500">
           ORB feature detection at 30 FPS
         </div>
       </div>
 
       <!-- Stage 02 -->
-      <div class="p-6 rounded-xl border border-brandBorder bg-brandCard space-y-3">
-        <div class="text-xs font-mono font-bold text-brandGreen tracking-wider">
+      <div class="p-6 rounded-xl border border-slate-200 bg-white shadow-sm hover:border-slate-300 transition-colors space-y-3">
+        <div class="text-xs font-mono font-bold text-brandGreenDark tracking-wider">
           02 / TELEMETRY
         </div>
-        <h3 class="font-bold text-lg text-white">Telemetry Ingestion</h3>
-        <p class="text-slate-400 text-xs leading-relaxed">
+        <h3 class="font-bold text-lg text-slate-900">Telemetry Ingestion</h3>
+        <p class="text-slate-600 text-xs leading-relaxed">
           Time-stamped GPS fixes, barometric altitude, attitude quaternions, and optical focal parameters are synchronized through MAVLink for downstream reconstruction.
         </p>
-        <div class="pt-3 border-t border-brandBorder/60 text-[11px] font-mono text-slate-400">
+        <div class="pt-3 border-t border-slate-100 text-[11px] font-mono text-slate-500">
           MAVLink telemetry synchronization
         </div>
       </div>
 
       <!-- Stage 03 -->
-      <div class="p-6 rounded-xl border border-brandBorder bg-brandCard space-y-3">
-        <div class="text-xs font-mono font-bold text-brandGreen tracking-wider">
+      <div class="p-6 rounded-xl border border-slate-200 bg-white shadow-sm hover:border-slate-300 transition-colors space-y-3">
+        <div class="text-xs font-mono font-bold text-brandGreenDark tracking-wider">
           03 / RECONSTRUCTION
         </div>
-        <h3 class="font-bold text-lg text-white">Volumetric Meshing</h3>
-        <p class="text-slate-400 text-xs leading-relaxed">
+        <h3 class="font-bold text-lg text-slate-900">Volumetric Meshing</h3>
+        <p class="text-slate-600 text-xs leading-relaxed">
           Depth Anything V2 infers relative monocular depth maps. Keyframes are unprojected into a unified 3D point cloud, filtered, and meshed using Open3D Screened Poisson.
         </p>
-        <div class="pt-3 border-t border-brandBorder/60 text-[11px] font-mono text-slate-400">
+        <div class="pt-3 border-t border-slate-100 text-[11px] font-mono text-slate-500">
           Depth Anything V2 & Poisson meshing
         </div>
       </div>
 
       <!-- Stage 04 -->
-      <div class="p-6 rounded-xl border border-brandBorder bg-brandCard space-y-3">
-        <div class="text-xs font-mono font-bold text-brandGreen tracking-wider">
+      <div class="p-6 rounded-xl border border-slate-200 bg-white shadow-sm hover:border-slate-300 transition-colors space-y-3">
+        <div class="text-xs font-mono font-bold text-brandGreenDark tracking-wider">
           04 / AUTONOMY
         </div>
-        <h3 class="font-bold text-lg text-white">Active Replanning</h3>
-        <p class="text-slate-400 text-xs leading-relaxed">
+        <h3 class="font-bold text-lg text-slate-900">Active Replanning</h3>
+        <p class="text-slate-600 text-xs leading-relaxed">
           The resulting mesh is inspected for occluded surfaces and reconstruction variance. Next-Best-View (NBV) trajectories are computed to dispatch follow-up inspection runs.
         </p>
-        <div class="pt-3 border-t border-brandBorder/60 text-[11px] font-mono text-slate-400">
+        <div class="pt-3 border-t border-slate-100 text-[11px] font-mono text-slate-500">
           Next-Best-View trajectory optimization
         </div>
       </div>
@@ -291,35 +293,35 @@
 </section>
 
 <!-- CORE PLATFORM FEATURES (ZIGZAG SECTION) -->
-<section id="platform" class="py-24 px-6 border-b border-brandBorder bg-[#040608]">
+<section id="platform" class="py-24 px-6 border-b border-slate-200 bg-slate-50/70">
   <div class="max-w-7xl mx-auto space-y-24">
     
     <div class="max-w-2xl space-y-2">
-      <span class="text-xs uppercase tracking-widest text-slate-400 font-mono block">
+      <span class="text-xs uppercase tracking-widest text-slate-500 font-mono block">
         Modules
       </span>
-      <h2 class="font-extrabold text-3xl sm:text-4xl text-white tracking-tight">
+      <h2 class="font-extrabold text-3xl sm:text-4xl text-slate-900 tracking-tight">
         Core Platform Modules
       </h2>
-      <p class="text-slate-400 text-sm leading-relaxed">
+      <p class="text-slate-600 text-sm leading-relaxed">
         Engineered for aerial surveying, spatial computing, and autonomous field robotics.
       </p>
     </div>
 
     <!-- Feature 01: Operational Dashboard -->
     <div class="grid lg:grid-cols-12 gap-10 lg:gap-14 items-center">
-      <div class="lg:col-span-7 rounded-xl border border-brandBorder bg-brandCard p-2 shadow-xl">
-        <div class="aspect-[16/9] rounded-lg overflow-hidden bg-brandDark relative">
+      <div class="lg:col-span-7 rounded-xl border border-slate-200 bg-white p-2 shadow-md">
+        <div class="aspect-[16/9] rounded-lg overflow-hidden bg-slate-100 relative">
           <img src="/static/dashboard_preview.png" alt="Operational Flight Deck" class="w-full h-full object-cover">
         </div>
       </div>
       <div class="lg:col-span-5 space-y-4">
-        <span class="text-xs font-mono font-bold text-brandGreen tracking-wider uppercase">Module 01</span>
-        <h3 class="font-bold text-2xl text-white">Operational Flight Deck</h3>
-        <p class="text-slate-400 text-sm leading-relaxed">
+        <span class="text-xs font-mono font-bold text-brandGreenDark tracking-wider uppercase">Module 01</span>
+        <h3 class="font-bold text-2xl text-slate-900">Operational Flight Deck</h3>
+        <p class="text-slate-600 text-sm leading-relaxed">
           Real-time camera streams pass directly into the ground control deck. Operators supervise live optical feeds, attitude indicators, flight mode states, and waypoint sequences in a single unified interface.
         </p>
-        <p class="text-slate-400 text-sm leading-relaxed">
+        <p class="text-slate-600 text-sm leading-relaxed">
           Integrates standard MAVLink protocols for bi-directional command routing, waypoint updates, and emergency fail-safe management during autonomous flight legs.
         </p>
       </div>
@@ -328,17 +330,17 @@
     <!-- Feature 02: Live Volumetric Meshing -->
     <div class="grid lg:grid-cols-12 gap-10 lg:gap-14 items-center">
       <div class="lg:col-span-5 space-y-4 lg:order-1 order-2">
-        <span class="text-xs font-mono font-bold text-brandGreen tracking-wider uppercase">Module 02</span>
-        <h3 class="font-bold text-2xl text-white">Volumetric Surface Reconstruction</h3>
-        <p class="text-slate-400 text-sm leading-relaxed">
+        <span class="text-xs font-mono font-bold text-brandGreenDark tracking-wider uppercase">Module 02</span>
+        <h3 class="font-bold text-2xl text-slate-900">Volumetric Surface Reconstruction</h3>
+        <p class="text-slate-600 text-sm leading-relaxed">
           Optical keyframes and synchronized pose matrices feed the 3D reconstruction pipeline. Monocular depth predictions from Depth Anything V2 are backprojected into Euclidean space.
         </p>
-        <p class="text-slate-400 text-sm leading-relaxed">
+        <p class="text-slate-600 text-sm leading-relaxed">
           Voxel grid filtering and statistical outlier removal condition the dense point cloud before Open3D Screened Poisson meshing generates a continuous watertight triangle mesh ready for export.
         </p>
       </div>
-      <div class="lg:col-span-7 rounded-xl border border-brandBorder bg-brandCard p-2 shadow-xl lg:order-2 order-1">
-        <div class="aspect-[16/9] rounded-lg overflow-hidden bg-brandDark relative">
+      <div class="lg:col-span-7 rounded-xl border border-slate-200 bg-white p-2 shadow-md lg:order-2 order-1">
+        <div class="aspect-[16/9] rounded-lg overflow-hidden bg-slate-100 relative">
           <img src="/static/mesh_preview.png" alt="Volumetric Surface Reconstruction" class="w-full h-full object-cover">
         </div>
       </div>
@@ -346,18 +348,18 @@
 
     <!-- Feature 03: Spatial Workstation -->
     <div class="grid lg:grid-cols-12 gap-10 lg:gap-14 items-center">
-      <div class="lg:col-span-7 rounded-xl border border-brandBorder bg-brandCard p-2 shadow-xl">
-        <div class="aspect-[16/9] rounded-lg overflow-hidden bg-brandDark relative">
+      <div class="lg:col-span-7 rounded-xl border border-slate-200 bg-white p-2 shadow-md">
+        <div class="aspect-[16/9] rounded-lg overflow-hidden bg-slate-100 relative">
           <img src="/static/workstation_preview.png" alt="Spatial Workstation 3D Tools" class="w-full h-full object-cover">
         </div>
       </div>
       <div class="lg:col-span-5 space-y-4">
-        <span class="text-xs font-mono font-bold text-brandGreen tracking-wider uppercase">Module 03</span>
-        <h3 class="font-bold text-2xl text-white">Spatial Measurement Workstation</h3>
-        <p class="text-slate-400 text-sm leading-relaxed">
+        <span class="text-xs font-mono font-bold text-brandGreenDark tracking-wider uppercase">Module 03</span>
+        <h3 class="font-bold text-2xl text-slate-900">Spatial Measurement Workstation</h3>
+        <p class="text-slate-600 text-sm leading-relaxed">
           Browser-based 3D workspace powered by Three.js. Engineers and surveyors can orbit reconstructed terrain, inspect camera trajectory arcs, calculate point-to-point Euclidean distances, and crop bounding volumes.
         </p>
-        <p class="text-slate-400 text-sm leading-relaxed">
+        <p class="text-slate-600 text-sm leading-relaxed">
           Exports models in standard geometry formats including OBJ, PLY, and camera trajectory JSON coordinates for external CAD and GIS integration.
         </p>
       </div>
@@ -366,17 +368,17 @@
     <!-- Feature 04: Asset Marketplace -->
     <div class="grid lg:grid-cols-12 gap-10 lg:gap-14 items-center">
       <div class="lg:col-span-5 space-y-4 lg:order-1 order-2">
-        <span class="text-xs font-mono font-bold text-brandGreen tracking-wider uppercase">Module 04</span>
-        <h3 class="font-bold text-2xl text-white">Geospatial Digital Twin Repository</h3>
-        <p class="text-slate-400 text-sm leading-relaxed">
+        <span class="text-xs font-mono font-bold text-brandGreenDark tracking-wider uppercase">Module 04</span>
+        <h3 class="font-bold text-2xl text-slate-900">Geospatial Digital Twin Repository</h3>
+        <p class="text-slate-600 text-sm leading-relaxed">
           Catalog and manage high-resolution photogrammetry datasets, digital surface models, and elevation layers in a centralized geospatial repository.
         </p>
-        <p class="text-slate-400 text-sm leading-relaxed">
+        <p class="text-slate-600 text-sm leading-relaxed">
           Filter spatial assets by geographic coordinates, capture resolution, polygon count, and sensor payload. Direct previews and access control enable multi-team collaboration.
         </p>
       </div>
-      <div class="lg:col-span-7 rounded-xl border border-brandBorder bg-brandCard p-2 shadow-xl lg:order-2 order-1">
-        <div class="aspect-[16/9] rounded-lg overflow-hidden bg-brandDark relative">
+      <div class="lg:col-span-7 rounded-xl border border-slate-200 bg-white p-2 shadow-md lg:order-2 order-1">
+        <div class="aspect-[16/9] rounded-lg overflow-hidden bg-slate-100 relative">
           <img src="/static/marketplace_preview.png" alt="Geospatial Asset Repository" class="w-full h-full object-cover">
         </div>
       </div>
@@ -385,37 +387,37 @@
   </div>
 </section>
 
-<!-- EXAMPLE RECONSTRUCTION RUN & BENCHMARKS (Replaces redundant simulator and fake telemetry) -->
-<section id="example-run" class="py-24 px-6 border-b border-brandBorder bg-brandDark">
+<!-- EXAMPLE RECONSTRUCTION RUN & BENCHMARKS -->
+<section id="example-run" class="py-24 px-6 border-b border-slate-200 bg-white">
   <div class="max-w-6xl mx-auto space-y-12">
     
     <div class="max-w-3xl space-y-2">
-      <span class="text-xs uppercase tracking-widest text-slate-400 font-mono block">
+      <span class="text-xs uppercase tracking-widest text-slate-500 font-mono block">
         Flight Evaluation Output
       </span>
-      <h2 class="font-extrabold text-3xl sm:text-4xl text-white tracking-tight">
+      <h2 class="font-extrabold text-3xl sm:text-4xl text-slate-900 tracking-tight">
         Sample Reconstruction Run
       </h2>
-      <p class="text-slate-400 text-sm leading-relaxed">
+      <p class="text-slate-600 text-sm leading-relaxed">
         Example outputs and benchmark data from an autonomous orbital survey sweep processed through the Minab monocular vision pipeline.
       </p>
     </div>
 
     <!-- Stage Comparison Viewer -->
-    <div class="rounded-2xl border border-brandBorder bg-brandCard overflow-hidden shadow-2xl">
+    <div class="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-lg">
       
       <!-- Interactive Stage Switcher Tabs -->
-      <div class="border-b border-brandBorder bg-brandDark/80 p-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="border-b border-slate-200 bg-slate-50/90 p-3 flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-2">
-          <span class="text-xs font-mono text-slate-400 uppercase tracking-wider">Output Stage:</span>
-          <div class="inline-flex rounded-lg border border-brandBorder bg-brandCard p-1 text-xs font-mono">
+          <span class="text-xs font-mono text-slate-600 uppercase tracking-wider">Output Stage:</span>
+          <div class="inline-flex rounded-lg border border-slate-200 bg-white p-1 text-xs font-mono shadow-sm">
             <button id="tabKeyframe" class="px-3 py-1.5 rounded bg-brandGreen text-white font-medium transition-colors" onclick="switchStage('keyframe')">
               1. Raw Keyframe
             </button>
-            <button id="tabMesh" class="px-3 py-1.5 rounded text-slate-400 hover:text-white transition-colors" onclick="switchStage('mesh')">
+            <button id="tabMesh" class="px-3 py-1.5 rounded text-slate-600 hover:text-slate-900 transition-colors" onclick="switchStage('mesh')">
               2. Dense Mesh
             </button>
-            <button id="tabInspection" class="px-3 py-1.5 rounded text-slate-400 hover:text-white transition-colors" onclick="switchStage('inspection')">
+            <button id="tabInspection" class="px-3 py-1.5 rounded text-slate-600 hover:text-slate-900 transition-colors" onclick="switchStage('inspection')">
               3. Measurement View
             </button>
           </div>
@@ -429,57 +431,57 @@
       <div class="grid lg:grid-cols-12 gap-0">
         
         <!-- Left: Image Viewer Display -->
-        <div class="lg:col-span-8 bg-black/60 flex items-center justify-center p-4 min-h-[380px] sm:min-h-[440px] relative border-b lg:border-b-0 lg:border-r border-brandBorder">
+        <div class="lg:col-span-8 bg-slate-100 flex items-center justify-center p-4 min-h-[380px] sm:min-h-[440px] relative border-b lg:border-b-0 lg:border-r border-slate-200">
           <img id="stageImage" src="/static/uav_exploration.png" alt="Reconstruction Stage View" class="max-h-[420px] w-full object-contain rounded">
-          <div id="stageCaption" class="absolute bottom-3 left-4 px-2.5 py-1 rounded bg-brandDark/90 border border-brandBorder text-[11px] font-mono text-slate-300">
+          <div id="stageCaption" class="absolute bottom-3 left-4 px-2.5 py-1 rounded bg-white/95 border border-slate-200 text-[11px] font-mono text-slate-700 shadow-sm">
             Raw Optical Frame: 1080p @ 30 FPS (Keyframe #24)
           </div>
         </div>
 
         <!-- Right: Grounded Benchmark Specifications -->
-        <div class="lg:col-span-4 p-6 flex flex-col justify-between space-y-6 bg-brandCard/60 font-mono text-xs">
+        <div class="lg:col-span-4 p-6 flex flex-col justify-between space-y-6 bg-slate-50/50 font-mono text-xs">
           <div>
-            <div class="text-slate-200 font-bold uppercase tracking-wider pb-3 border-b border-brandBorder">
+            <div class="text-slate-900 font-bold uppercase tracking-wider pb-3 border-b border-slate-200">
               Run Benchmark Specs
             </div>
             
-            <dl class="divide-y divide-brandBorder/60 mt-3 space-y-2 text-slate-400">
+            <dl class="divide-y divide-slate-200 mt-3 space-y-2 text-slate-600">
               <div class="flex justify-between pt-2">
                 <dt>Flight Duration:</dt>
-                <dd class="text-slate-200">2m 14s orbital sweep</dd>
+                <dd class="text-slate-900 font-medium">2m 14s orbital sweep</dd>
               </div>
               <div class="flex justify-between pt-2">
                 <dt>Altitude AGL:</dt>
-                <dd class="text-slate-200">35.0 m nominal</dd>
+                <dd class="text-slate-900 font-medium">35.0 m nominal</dd>
               </div>
               <div class="flex justify-between pt-2">
                 <dt>Selected Keyframes:</dt>
-                <dd class="text-slate-200">64 frames (stride 2)</dd>
+                <dd class="text-slate-900 font-medium">64 frames (stride 2)</dd>
               </div>
               <div class="flex justify-between pt-2">
                 <dt>Depth Estimator:</dt>
-                <dd class="text-slate-200">Depth Anything V2</dd>
+                <dd class="text-slate-900 font-medium">Depth Anything V2</dd>
               </div>
               <div class="flex justify-between pt-2">
                 <dt>Point Cloud Vertices:</dt>
-                <dd class="text-brandGreen font-semibold">1,842,500</dd>
+                <dd class="text-brandGreenDark font-bold">1,842,500</dd>
               </div>
               <div class="flex justify-between pt-2">
                 <dt>Reconstructed Faces:</dt>
-                <dd class="text-slate-200">915,200 polygons</dd>
+                <dd class="text-slate-900 font-medium">915,200 polygons</dd>
               </div>
               <div class="flex justify-between pt-2">
                 <dt>Mean Reprojection:</dt>
-                <dd class="text-slate-200">0.78 px error</dd>
+                <dd class="text-slate-900 font-medium">0.78 px error</dd>
               </div>
               <div class="flex justify-between pt-2">
                 <dt>Poisson Octree Depth:</dt>
-                <dd class="text-slate-200">Level 9</dd>
+                <dd class="text-slate-900 font-medium">Level 9</dd>
               </div>
             </dl>
           </div>
 
-          <div class="pt-4 border-t border-brandBorder text-slate-500 text-[11px] leading-relaxed">
+          <div class="pt-4 border-t border-slate-200 text-slate-500 text-[11px] leading-relaxed">
             Data acquired during autonomous orbital survey. Processed with local CUDA-accelerated Depth Anything V2 pipeline.
           </div>
         </div>
@@ -491,45 +493,45 @@
   </div>
 </section>
 
-<!-- REQUEST ACCESS MODAL (Clean, customer-facing CTA) -->
-<div id="accessModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-  <div class="max-w-md w-full rounded-xl border border-brandBorder bg-brandCard p-6 sm:p-8 space-y-6 shadow-2xl relative">
+<!-- REQUEST ACCESS MODAL -->
+<div id="accessModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+  <div class="max-w-md w-full rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 space-y-6 shadow-2xl relative">
     
-    <div class="flex items-center justify-between border-b border-brandBorder pb-4">
+    <div class="flex items-center justify-between border-b border-slate-200 pb-4">
       <div class="flex items-center gap-2.5">
-        <div class="w-6 h-6 rounded bg-brandDark border border-brandBorder flex items-center justify-center p-1">
+        <div class="w-6 h-6 rounded bg-slate-50 border border-slate-200 flex items-center justify-center p-1 shadow-sm">
           <img src="/static/logo.png" alt="Minab Logo" class="h-full w-full object-contain">
         </div>
-        <span class="font-bold text-white text-base">Request Platform Access</span>
+        <span class="font-bold text-slate-900 text-base">Request Platform Access</span>
       </div>
-      <button id="closeModalBtn" class="text-slate-400 hover:text-white transition-colors text-lg font-mono leading-none">&times;</button>
+      <button id="closeModalBtn" class="text-slate-400 hover:text-slate-700 transition-colors text-lg font-mono leading-none">&times;</button>
     </div>
 
     <!-- Form state -->
     <div id="accessFormContainer">
-      <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+      <p class="text-xs text-slate-600 mb-4 leading-relaxed">
         Register your organization or research team for evaluation access to the Minab spatial intelligence engine and 3D reconstruction tools.
       </p>
 
       <form id="accessForm" class="space-y-4 text-xs font-sans" onsubmit="handleAccessSubmit(event)">
         <div>
-          <label class="block text-slate-300 font-medium mb-1">Full Name</label>
-          <input type="text" required placeholder="Dr. Sarah Chen" class="w-full px-3 py-2 rounded bg-brandDark border border-brandBorder text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brandGreen">
+          <label class="block text-slate-700 font-semibold mb-1">Full Name</label>
+          <input type="text" required placeholder="Dr. Sarah Chen" class="w-full px-3 py-2 rounded bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-brandGreen focus:bg-white focus:ring-1 focus:ring-brandGreen">
         </div>
 
         <div>
-          <label class="block text-slate-300 font-medium mb-1">Work / Institutional Email</label>
-          <input type="email" required placeholder="s.chen@university.edu" class="w-full px-3 py-2 rounded bg-brandDark border border-brandBorder text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brandGreen">
+          <label class="block text-slate-700 font-semibold mb-1">Work / Institutional Email</label>
+          <input type="email" required placeholder="s.chen@university.edu" class="w-full px-3 py-2 rounded bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-brandGreen focus:bg-white focus:ring-1 focus:ring-brandGreen">
         </div>
 
         <div>
-          <label class="block text-slate-300 font-medium mb-1">Organization or Institution</label>
-          <input type="text" required placeholder="Robotics & Perception Lab" class="w-full px-3 py-2 rounded bg-brandDark border border-brandBorder text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brandGreen">
+          <label class="block text-slate-700 font-semibold mb-1">Organization or Institution</label>
+          <input type="text" required placeholder="Robotics & Perception Lab" class="w-full px-3 py-2 rounded bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-brandGreen focus:bg-white focus:ring-1 focus:ring-brandGreen">
         </div>
 
         <div>
-          <label class="block text-slate-300 font-medium mb-1">Primary Application</label>
-          <select class="w-full px-3 py-2 rounded bg-brandDark border border-brandBorder text-slate-200 focus:outline-none focus:border-brandGreen">
+          <label class="block text-slate-700 font-semibold mb-1">Primary Application</label>
+          <select class="w-full px-3 py-2 rounded bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:border-brandGreen focus:bg-white focus:ring-1 focus:ring-brandGreen">
             <option>Aerial Surveying & 3D Mapping</option>
             <option>Autonomous UAV Exploration & Robotics</option>
             <option>Computer Vision & Monocular Depth Research</option>
@@ -538,7 +540,7 @@
           </select>
         </div>
 
-        <button type="submit" class="w-full mt-2 py-2.5 rounded bg-brandGreen hover:bg-brandGreenDark text-white font-medium text-xs transition-colors">
+        <button type="submit" class="w-full mt-2 py-2.5 rounded bg-brandGreen hover:bg-brandGreenDark text-white font-semibold text-xs transition-colors shadow-sm">
           Submit Access Request
         </button>
       </form>
@@ -546,70 +548,68 @@
 
     <!-- Success state (hidden initially) -->
     <div id="accessSuccessContainer" class="hidden space-y-4 text-center py-4">
-      <div class="w-10 h-10 mx-auto rounded-full bg-brandGreen/20 text-brandGreen flex items-center justify-center font-bold text-lg">
+      <div class="w-10 h-10 mx-auto rounded-full bg-emerald-100 text-brandGreenDark flex items-center justify-center font-bold text-lg">
         ✓
       </div>
-      <h4 class="font-bold text-base text-white">Access Request Received</h4>
-      <p class="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
+      <h4 class="font-bold text-base text-slate-900">Access Request Received</h4>
+      <p class="text-xs text-slate-600 leading-relaxed max-w-xs mx-auto">
         Thank you. Our engineering team will review your application and send API credentials and staging documentation to your email.
       </p>
       <div class="pt-2">
-        <button onclick="document.getElementById('accessModal').classList.add('hidden')" class="px-5 py-2 rounded bg-brandDark border border-brandBorder hover:border-slate-500 text-slate-300 text-xs transition-colors">
+        <button onclick="document.getElementById('accessModal').classList.add('hidden')" class="px-5 py-2 rounded bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-700 text-xs transition-colors">
           Close Window
         </button>
       </div>
     </div>
 
-    <div class="pt-3 border-t border-brandBorder flex items-center justify-between text-[11px] font-mono text-slate-500">
+    <div class="pt-3 border-t border-slate-200 flex items-center justify-between text-[11px] font-mono text-slate-500">
       <span>Documentation available on GitHub</span>
-      <a href="https://github.com/itzlead12/minab" target="_blank" class="text-slate-400 hover:text-white transition-colors">View Repo ↗</a>
+      <a href="https://github.com/itzlead12/minab" target="_blank" class="text-slate-700 hover:text-slate-900 transition-colors">View Repo ↗</a>
     </div>
 
   </div>
 </div>
 
 <!-- FOOTER -->
-<footer class="border-t border-brandBorder py-14 px-6 bg-brandDark text-xs">
+<footer class="border-t border-slate-200 py-14 px-6 bg-slate-50 text-xs">
   <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
     
     <div class="md:col-span-2 space-y-3">
       <div class="flex items-center gap-2.5">
         <img src="/static/logo.png" alt="Minab Logo" class="h-6 w-auto object-contain">
-        <span class="font-bold tracking-tight text-white uppercase text-sm">ምናብ | Minab Platform</span>
+        <span class="font-bold tracking-tight text-slate-900 uppercase text-sm">ምናብ | Minab Platform</span>
       </div>
-      <p class="text-slate-400 leading-relaxed max-w-sm">
+      <p class="text-slate-600 leading-relaxed max-w-sm">
         Aerospace and computer-vision research platform. Continuous flight telemetry, neural monocular depth estimation, and closed-loop autonomous spatial exploration.
       </p>
-      <div class="text-[11px] font-mono text-slate-400">
+      <div class="text-[11px] font-mono text-brandGreenDark font-medium">
         See. Reconstruct. Understand. Explore.
       </div>
     </div>
     
     <div>
-      <h4 class="font-bold text-white uppercase tracking-wider mb-3">Platform</h4>
-      <ul class="space-y-2 text-slate-400">
-        <li><a href="#pipeline" class="hover:text-white transition-colors">Visual Acquisition</a></li>
-        <li><a href="#pipeline" class="hover:text-white transition-colors">Telemetry Synchronization</a></li>
-        <li><a href="#pipeline" class="hover:text-white transition-colors">Volumetric Meshing</a></li>
-        <li><a href="#pipeline" class="hover:text-white transition-colors">Active Replanning</a></li>
+      <h4 class="font-bold text-slate-900 uppercase tracking-wider mb-3">Platform</h4>
+      <ul class="space-y-2 text-slate-600">
+        <li><a href="#pipeline" class="hover:text-slate-900 transition-colors">Visual Acquisition</a></li>
+        <li><a href="#pipeline" class="hover:text-slate-900 transition-colors">Telemetry Synchronization</a></li>
+        <li><a href="#pipeline" class="hover:text-slate-900 transition-colors">Volumetric Meshing</a></li>
+        <li><a href="#pipeline" class="hover:text-slate-900 transition-colors">Active Replanning</a></li>
       </ul>
     </div>
     
     <div>
-      <h4 class="font-bold text-white uppercase tracking-wider mb-3">Resources</h4>
-      <ul class="space-y-2 text-slate-400">
-        <li><a href="https://github.com/itzlead12/minab" target="_blank" class="hover:text-white transition-colors">GitHub Repository</a></li>
-        <li><a href="#example-run" class="hover:text-white transition-colors">Sample Reconstruction Run</a></li>
-        <li><button onclick="document.getElementById('openAccessModalBtn').click()" class="hover:text-white transition-colors text-left">Request Access</button></li>
+      <h4 class="font-bold text-slate-900 uppercase tracking-wider mb-3">Resources</h4>
+      <ul class="space-y-2 text-slate-600">
+        <li><a href="https://github.com/itzlead12/minab" target="_blank" class="hover:text-slate-900 transition-colors">GitHub Repository</a></li>
+        <li><a href="#example-run" class="hover:text-slate-900 transition-colors">Sample Reconstruction Run</a></li>
+        <li><button onclick="document.getElementById('openAccessModalBtn').click()" class="hover:text-slate-900 transition-colors text-left">Request Access</button></li>
       </ul>
     </div>
   </div>
 
-  <div class="max-w-7xl mx-auto border-t border-brandBorder pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-slate-500 text-[11px]">
+  <div class="max-w-7xl mx-auto border-t border-slate-200 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-slate-500 text-[11px]">
     <div>&copy; 2026 MINAB RESEARCH PLATFORM.</div>
     <div class="flex gap-6">
-      <a href="https://github.com/itzlead12/minab" target="_blank" class="hover:text-slate-300 transition-colors">OPEN SOURCE LICENSE (MIT)</a>
-      <a href="https://github.com/itzlead12/minab" target="_blank" class="hover:text-slate-300 transition-colors">RESEARCH STATEMENT</a>
     </div>
   </div>
 </footer>
@@ -649,8 +649,8 @@
       viewer.autoRotate = isRotating;
       btnToggleRotate.innerText = isRotating ? "Rotate: ON" : "Rotate: OFF";
       btnToggleRotate.className = isRotating 
-        ? "px-2.5 py-1 rounded bg-brandCard text-brandGreen hover:text-white transition-colors"
-        : "px-2.5 py-1 rounded bg-brandCard text-slate-500 hover:text-white transition-colors";
+        ? "px-2.5 py-1 rounded bg-slate-100 text-brandGreenDark hover:bg-slate-200 transition-colors font-medium"
+        : "px-2.5 py-1 rounded bg-slate-100 text-slate-500 hover:text-slate-900 hover:bg-slate-200 transition-colors";
     });
   }
 
@@ -711,7 +711,7 @@
     const btnInspection = document.getElementById('tabInspection');
 
     const activeClasses = "px-3 py-1.5 rounded bg-brandGreen text-white font-medium transition-colors";
-    const inactiveClasses = "px-3 py-1.5 rounded text-slate-400 hover:text-white transition-colors";
+    const inactiveClasses = "px-3 py-1.5 rounded text-slate-600 hover:text-slate-900 transition-colors";
 
     btnKeyframe.className = stageKey === 'keyframe' ? activeClasses : inactiveClasses;
     btnMesh.className = stageKey === 'mesh' ? activeClasses : inactiveClasses;
